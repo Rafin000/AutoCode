@@ -68,6 +68,25 @@ CREATE TABLE IF NOT EXISTS features (
 
 CREATE INDEX IF NOT EXISTS idx_features_repo   ON features(repo);
 CREATE INDEX IF NOT EXISTS idx_features_status ON features(status);
+
+-- Workflow runs — one row per execution of a pipeline (added in schema v3).
+-- States: running → (completed | paused | failed)
+-- Paused runs can be resumed via "run resume <id>".
+CREATE TABLE IF NOT EXISTS workflow_runs (
+  id              TEXT PRIMARY KEY,
+  pipeline_name   TEXT NOT NULL,
+  status          TEXT NOT NULL,
+  inputs          TEXT NOT NULL,   -- JSON
+  steps           TEXT NOT NULL,   -- JSON map of stepId → StepResult
+  current_step    TEXT,             -- id of the step we stopped at (paused or failed)
+  error           TEXT,
+  started_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  finished_at     TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_runs_pipeline ON workflow_runs(pipeline_name);
+CREATE INDEX IF NOT EXISTS idx_runs_status   ON workflow_runs(status);
 `;
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;

@@ -27,6 +27,12 @@ import {
   featureApproveCommand,
 } from "./commands/feature.js";
 import { getPackageVersion, versionCommand } from "./commands/version.js";
+import {
+  runExecuteCommand,
+  runListCommand,
+  runShowCommand,
+  runPipelinesCommand,
+} from "./commands/run.js";
 
 const program = new Command();
 
@@ -115,6 +121,45 @@ hook
   .command("list")
   .description("Show hook status for every registered repo")
   .action(hookListCommand);
+
+// ─── Workflow engine (pipelines + runs) ─────────────────────────────────────
+const run = program
+  .command("run")
+  .description("Run user-defined pipelines from ~/.auto-coder/pipelines/");
+
+run
+  .arguments("[pipeline]")
+  .option(
+    "-i, --input <kv>",
+    "Input as key=value (repeatable)",
+    (value: string, previous: string[]) => [...previous, value],
+    [] as string[],
+  )
+  .action(async (pipeline: string | undefined, opts: { input: string[] }) => {
+    if (!pipeline) {
+      console.error("Usage: auto-coder run <pipeline> [-i key=value ...]");
+      console.error("       auto-coder run list       — show past runs");
+      console.error("       auto-coder run pipelines  — show available pipelines");
+      process.exit(1);
+    }
+    await runExecuteCommand(pipeline, opts);
+  });
+
+run
+  .command("list")
+  .description("List past workflow runs")
+  .option("-p, --pipeline <name>", "Filter by pipeline name")
+  .action(runListCommand);
+
+run
+  .command("show <id>")
+  .description("Show full details for a single run")
+  .action(runShowCommand);
+
+run
+  .command("pipelines")
+  .description("List every pipeline defined in ~/.auto-coder/pipelines/")
+  .action(runPipelinesCommand);
 
 // ─── Feature lifecycle ──────────────────────────────────────────────────────
 const feature = program
