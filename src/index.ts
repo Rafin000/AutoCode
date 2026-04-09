@@ -20,6 +20,12 @@ import {
 } from "./commands/hook.js";
 import { askCommand } from "./commands/ask.js";
 import { interviewCommand } from "./commands/interview.js";
+import {
+  featureCreateCommand,
+  featureListCommand,
+  featureStatusCommand,
+  featureApproveCommand,
+} from "./commands/feature.js";
 
 const program = new Command();
 
@@ -103,6 +109,36 @@ hook
   .command("list")
   .description("Show hook status for every registered repo")
   .action(hookListCommand);
+
+// ─── Feature lifecycle ──────────────────────────────────────────────────────
+const feature = program
+  .command("feature")
+  .description("Create and manage AI-implemented features");
+
+feature
+  .command("create")
+  .description("Spawn Claude CLI to implement a new feature on a branch + open a PR")
+  .requiredOption("-t, --title <title>", "Feature title (short)")
+  .requiredOption("-d, --description <desc>", "Feature description (full)")
+  .option("-r, --repo <name>", "Target repo (default: first registered repo)")
+  .option("--no-pr", "Skip PR creation (just commit and push the branch)")
+  .action(featureCreateCommand);
+
+feature
+  .command("list")
+  .description("List every feature and its status")
+  .option("-r, --repo <name>", "Filter by repo")
+  .action(featureListCommand);
+
+feature
+  .command("status <id>")
+  .description("Show full details for a single feature")
+  .action(featureStatusCommand);
+
+feature
+  .command("approve <id>")
+  .description("Mark a merged feature as approved")
+  .action(featureApproveCommand);
 
 // ─── Ask / Interview ────────────────────────────────────────────────────────
 program
