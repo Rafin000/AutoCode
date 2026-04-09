@@ -46,7 +46,7 @@ export const DEFAULT_CONFIG: Config = {
     graph: {
       url: "bolt://localhost:7687",
       username: "neo4j",
-      password: "auto-coder",
+      password: "repo-agent",
     },
     vectors: {
       url: "http://localhost:6333",

@@ -7,6 +7,10 @@ import {
   repoListCommand,
   repoRemoveCommand,
 } from "./commands/repo.js";
+import {
+  knowledgeTestGraphCommand,
+  knowledgeStatsCommand,
+} from "./commands/knowledge.js";
 
 const program = new Command();
 
@@ -43,6 +47,21 @@ repo
   .command("remove <name>")
   .description("Remove a repo from the registry")
   .action(repoRemoveCommand);
+
+// ─── Knowledge base diagnostics ─────────────────────────────────────────────
+const knowledge = program
+  .command("knowledge")
+  .description("Inspect and test the knowledge base");
+
+knowledge
+  .command("test-graph")
+  .description("Smoke-test the Neo4j connection")
+  .action(knowledgeTestGraphCommand);
+
+knowledge
+  .command("stats")
+  .description("Show counts across SQLite + Neo4j")
+  .action(knowledgeStatsCommand);
 
 // ─── Sync ───────────────────────────────────────────────────────────────────
 program
