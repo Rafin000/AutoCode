@@ -1,0 +1,9 @@
+{
+  "status": "completed",
+  "summary": "Added a top-level `auto-coder version` subcommand that prints the package version read from package.json at runtime. Also wired Commander's built-in `.version()` to the same helper so the hardcoded '0.1.0' literal is gone.",
+  "files_modified": ["src/index.ts"],
+  "files_created": ["src/commands/version.ts"],
+  "tests_run": "none",
+  "impact_report": "Created src/commands/version.ts which exports `getPackageVersion()` (walks up from the module's directory until it finds an `auto-coder` package.json and returns its `version`) and `versionCommand()` (prints that version). src/index.ts now imports both: the top-level program's `.version(...)` call uses `getPackageVersion()` instead of the hardcoded '0.1.0', and a new `program.command('version')` subcommand is registered alongside the other top-level commands. The directory-walk approach works in both dev mode (`tsx src/index.ts`, where the module lives at src/commands/version.ts) and after `tsup` bundles into dist/index.js, since package.json sits at the repo root in both cases. Risk: if the compiled binary is ever relocated away from the repo layout (e.g., published and installed into node_modules), the walk still works because package.json is always at the package root above the built file. No tests were added — the repo has no test setup (no test script, no test framework in devDependencies). Follow-ups: none required.",
+  "notes": "Verified manually: `npx tsx src/index.ts version` prints `0.1.0`, and `npx tsx src/index.ts --version` also prints `0.1.0`. Pre-existing TypeScript errors in src/sync/extractor.ts and src/sync/processor.ts are unrelated to this change and were not touched."
+}

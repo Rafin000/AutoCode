@@ -26,13 +26,19 @@ import {
   featureStatusCommand,
   featureApproveCommand,
 } from "./commands/feature.js";
+import { getPackageVersion, versionCommand } from "./commands/version.js";
 
 const program = new Command();
 
 program
   .name("auto-coder")
   .description("Personal AI that knows your code and answers questions grounded in your real work.")
-  .version("0.1.0");
+  .version(getPackageVersion());
+
+program
+  .command("version")
+  .description("Print the auto-coder version and exit")
+  .action(versionCommand);
 
 // ─── Setup ──────────────────────────────────────────────────────────────────
 program
