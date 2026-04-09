@@ -9,6 +9,7 @@ import {
 } from "./commands/repo.js";
 import {
   knowledgeTestGraphCommand,
+  knowledgeTestVectorsCommand,
   knowledgeStatsCommand,
 } from "./commands/knowledge.js";
 
@@ -59,8 +60,13 @@ knowledge
   .action(knowledgeTestGraphCommand);
 
 knowledge
+  .command("test-vectors")
+  .description("Smoke-test Qdrant + the local embedder")
+  .action(knowledgeTestVectorsCommand);
+
+knowledge
   .command("stats")
-  .description("Show counts across SQLite + Neo4j")
+  .description("Show counts across SQLite, Neo4j, and Qdrant")
   .action(knowledgeStatsCommand);
 
 // ─── Sync ───────────────────────────────────────────────────────────────────

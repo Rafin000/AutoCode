@@ -1,5 +1,6 @@
 import { loadConfig } from "../config/loader.js";
 import { GraphClient } from "../knowledge/graph.js";
+import { VectorClient, VectorPoint } from "../knowledge/vectors.js";
 import { getDbStats } from "../db/init.js";
 
 /**
@@ -8,9 +9,6 @@ import { getDbStats } from "../db/init.js";
  * 2. Upsert a throwaway node
  * 3. Query it back
  * 4. Delete it
- *
- * Use this after `init` to confirm the graph is wired up before running
- * any real sync.
  */
 export async function knowledgeTestGraphCommand(): Promise<void> {
   const config = loadConfig();
@@ -38,7 +36,7 @@ export async function knowledgeTestGraphCommand(): Promise<void> {
     if (found.length !== 1) {
       throw new Error(`Expected 1 test node, got ${found.length}`);
     }
-    console.log(`  ✓ Found 1 node: ${JSON.stringify(found[0])}`);
+    console.log(`  ✓ Found 1 node`);
 
     console.log("• Cleaning up test node...");
     const deleted = await graph.deleteByRepo(testRepo);
@@ -58,6 +56,91 @@ export async function knowledgeTestGraphCommand(): Promise<void> {
     process.exit(1);
   } finally {
     await graph.close();
+  }
+}
+
+/**
+ * Smoke-test the Qdrant connection end-to-end:
+ * 1. Verify connectivity
+ * 2. Ensure collection exists
+ * 3. Upsert two test documents (triggers embedding model download on first run)
+ * 4. Run a semantic search and confirm the best match is the right one
+ * 5. Delete test points
+ */
+export async function knowledgeTestVectorsCommand(): Promise<void> {
+  const config = loadConfig();
+  const vectors = new VectorClient(config.knowledge.vectors, config.embedder);
+
+  try {
+    console.log(`• Connecting to ${config.knowledge.vectors.url}...`);
+    await vectors.verifyConnectivity();
+    console.log("  ✓ Connected");
+
+    console.log(`• Ensuring collection "${config.knowledge.vectors.collection}" exists...`);
+    await vectors.ensureCollection();
+    console.log("  ✓ Ready");
+
+    const testRepo = "__auto-coder-smoke-test__";
+    const testDocs: VectorPoint[] = [
+      {
+        id: `${testRepo}:retry`,
+        content: "Implement exponential backoff retry when the API returns 5xx errors",
+        payload: {
+          repo: testRepo,
+          doc_type: "function",
+          file_path: "src/retry.ts",
+        },
+      },
+      {
+        id: `${testRepo}:kittens`,
+        content: "Kittens are small fluffy animals that love to chase string",
+        payload: {
+          repo: testRepo,
+          doc_type: "function",
+          file_path: "src/cat.ts",
+        },
+      },
+    ];
+
+    console.log("• Embedding + upserting 2 test documents");
+    console.log("  (first run downloads ~90MB embedding model — one-time)...");
+    await vectors.upsert(testDocs);
+    console.log("  ✓ Upserted");
+
+    const query = "how to retry failed API calls";
+    console.log(`• Semantic search: "${query}"`);
+    const results = await vectors.search(query, 2, testRepo);
+    if (results.length === 0) {
+      throw new Error("No search results returned");
+    }
+    console.log(`  ✓ Got ${results.length} results`);
+    results.forEach((r, i) => {
+      const content = String(r.payload?.content ?? "").slice(0, 60);
+      console.log(`    ${i + 1}. [${r.score.toFixed(3)}] ${content}`);
+    });
+    // Sanity check: retry doc should score higher than kittens
+    const topPayload = results[0]?.payload;
+    const topContent = String(topPayload?.content ?? "");
+    if (!topContent.toLowerCase().includes("retry")) {
+      throw new Error(`Top match was not the retry doc: ${topContent}`);
+    }
+
+    console.log("• Cleaning up test points...");
+    await vectors.deleteByRepo(testRepo);
+    console.log("  ✓ Deleted");
+
+    console.log();
+    console.log("Qdrant + embedder are wired up correctly ✨");
+  } catch (err) {
+    console.error();
+    console.error("✗ Vector smoke test failed:");
+    console.error("  ", (err as Error).message);
+    console.error();
+    console.error("Common causes:");
+    console.error("  - Qdrant not running: `docker ps` should show a qdrant container");
+    console.error("  - Wrong URL: default is http://localhost:6333");
+    console.error("  - First-run model download blocked by network");
+    process.exit(1);
   }
 }
 
@@ -94,5 +177,17 @@ export async function knowledgeStatsCommand(): Promise<void> {
     console.log(`  (unreachable — ${(err as Error).message})`);
   } finally {
     await graph.close();
+  }
+  console.log();
+
+  // Qdrant side
+  console.log(`# Qdrant (vectors · collection "${config.knowledge.vectors.collection}")`);
+  const vectors = new VectorClient(config.knowledge.vectors, config.embedder);
+  try {
+    await vectors.verifyConnectivity();
+    const count = await vectors.count();
+    console.log(`  points: ${count}`);
+  } catch (err) {
+    console.log(`  (unreachable — ${(err as Error).message})`);
   }
 }
