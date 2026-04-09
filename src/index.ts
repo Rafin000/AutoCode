@@ -18,6 +18,8 @@ import {
   hookUninstallCommand,
   hookListCommand,
 } from "./commands/hook.js";
+import { askCommand } from "./commands/ask.js";
+import { interviewCommand } from "./commands/interview.js";
 
 const program = new Command();
 
@@ -106,16 +108,16 @@ hook
 program
   .command("ask <question>")
   .description("Ask a question about your work")
-  .action(async (_question: string) => {
-    console.log("TODO: ask — Milestone 8");
-  });
+  .option("-r, --repo <name>", "Limit search to a single registered repo")
+  .option("-k, --top-k <n>", "Number of documents to retrieve", "8")
+  .action(askCommand);
 
 program
   .command("interview <question>")
   .description("Answer a question in interview format with concrete examples")
-  .action(async (_question: string) => {
-    console.log("TODO: interview — Milestone 8");
-  });
+  .option("-r, --repo <name>", "Limit to a single registered repo")
+  .option("-k, --top-k <n>", "Number of documents to retrieve", "10")
+  .action(interviewCommand);
 
 program.parseAsync(process.argv).catch((err) => {
   console.error(err);

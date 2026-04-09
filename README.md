@@ -178,7 +178,7 @@ Incremental sync is cheap, so running daily has negligible cost.
 - [x] M5 — Vector client + embedder
 - [x] M6 — Sync pipeline (walker, extractor, processor)
 - [x] M7 — Git hook installer + cron helper
-- [ ] M8 — `ask` and `interview` commands
+- [x] M8 — `ask` and `interview` commands — **v1 complete**
 
 ## License
 
