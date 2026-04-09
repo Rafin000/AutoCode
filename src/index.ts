@@ -1,0 +1,95 @@
+#!/usr/bin/env node
+import { Command } from "commander";
+
+const program = new Command();
+
+program
+  .name("auto-coder")
+  .description("Personal AI that knows your code and answers questions grounded in your real work.")
+  .version("0.1.0");
+
+// ─── Setup ──────────────────────────────────────────────────────────────────
+program
+  .command("init")
+  .description("Create ~/.auto-coder/ directory and default config")
+  .action(async () => {
+    console.log("TODO: init — will be implemented in Milestone 2");
+  });
+
+program
+  .command("config")
+  .description("Show the current config")
+  .action(async () => {
+    console.log("TODO: config — will be implemented in Milestone 2");
+  });
+
+// ─── Repos ──────────────────────────────────────────────────────────────────
+const repo = program.command("repo").description("Manage registered repos");
+
+repo
+  .command("add <name> <path>")
+  .description("Register a repo to be indexed")
+  .action(async (_name: string, _path: string) => {
+    console.log("TODO: repo add — Milestone 2");
+  });
+
+repo
+  .command("list")
+  .description("List all registered repos")
+  .action(async () => {
+    console.log("TODO: repo list — Milestone 2");
+  });
+
+repo
+  .command("remove <name>")
+  .description("Remove a repo from the registry")
+  .action(async (_name: string) => {
+    console.log("TODO: repo remove — Milestone 2");
+  });
+
+// ─── Sync ───────────────────────────────────────────────────────────────────
+program
+  .command("sync [name]")
+  .description("Sync one repo (or all with --all)")
+  .option("--all", "Sync every registered repo")
+  .option("--quiet", "Suppress output (used by git hooks)")
+  .action(async (_name: string | undefined, _opts: { all?: boolean; quiet?: boolean }) => {
+    console.log("TODO: sync — Milestone 6");
+  });
+
+// ─── Git hooks ──────────────────────────────────────────────────────────────
+const hook = program.command("hook").description("Manage git hooks for auto-sync");
+
+hook
+  .command("install <name>")
+  .description("Install a post-commit hook in the repo")
+  .action(async (_name: string) => {
+    console.log("TODO: hook install — Milestone 7");
+  });
+
+hook
+  .command("uninstall <name>")
+  .description("Remove the post-commit hook from the repo")
+  .action(async (_name: string) => {
+    console.log("TODO: hook uninstall — Milestone 7");
+  });
+
+// ─── Ask / Interview ────────────────────────────────────────────────────────
+program
+  .command("ask <question>")
+  .description("Ask a question about your work")
+  .action(async (_question: string) => {
+    console.log("TODO: ask — Milestone 8");
+  });
+
+program
+  .command("interview <question>")
+  .description("Answer a question in interview format with concrete examples")
+  .action(async (_question: string) => {
+    console.log("TODO: interview — Milestone 8");
+  });
+
+program.parseAsync(process.argv).catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
