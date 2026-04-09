@@ -54,9 +54,21 @@ export async function spawnClaudeCli(opts: SpawnOptions): Promise<SpawnResult> {
 
   const mergedEnv = { ...process.env, ...(opts.env ?? {}) };
 
+  // --dangerously-skip-permissions is necessary because we're running
+  // Claude CLI non-interactively. Without it, any Write/Edit/Bash tool
+  // that would normally prompt for permission gets silently blocked —
+  // the events stream through but nothing hits disk. The user opted in
+  // to this by running `auto-coder feature create`, which is an
+  // explicit request to let Claude modify their repo.
   const child: ChildProcess = spawn(
     "claude",
-    ["--output-format", "stream-json", "--verbose", "--print"],
+    [
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--print",
+      "--dangerously-skip-permissions",
+    ],
     {
       cwd: opts.workingDir,
       env: mergedEnv,
