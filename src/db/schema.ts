@@ -44,6 +44,30 @@ CREATE TABLE IF NOT EXISTS sync_state (
   value       TEXT NOT NULL,
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Feature lifecycle table (added in schema v2).
+-- States: pending → implementing → ready_for_review → approved | failed
+CREATE TABLE IF NOT EXISTS features (
+  id              TEXT PRIMARY KEY,
+  repo            TEXT NOT NULL,
+  title           TEXT NOT NULL,
+  description     TEXT NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'pending',
+  branch_name     TEXT,
+  files_modified  TEXT,           -- JSON array of relative paths
+  files_created   TEXT,           -- JSON array of relative paths
+  pr_url          TEXT,
+  pr_number       INTEGER,
+  impact_report   TEXT,
+  test_results    TEXT,
+  error_message   TEXT,
+  tokens_used     TEXT,           -- JSON: { input, output }
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_features_repo   ON features(repo);
+CREATE INDEX IF NOT EXISTS idx_features_status ON features(status);
 `;
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
