@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { initCommand } from "./commands/init.js";
+import { configCommand } from "./commands/config.js";
+import {
+  repoAddCommand,
+  repoListCommand,
+  repoRemoveCommand,
+} from "./commands/repo.js";
 
 const program = new Command();
 
@@ -12,16 +19,12 @@ program
 program
   .command("init")
   .description("Create ~/.auto-coder/ directory and default config")
-  .action(async () => {
-    console.log("TODO: init — will be implemented in Milestone 2");
-  });
+  .action(initCommand);
 
 program
   .command("config")
   .description("Show the current config")
-  .action(async () => {
-    console.log("TODO: config — will be implemented in Milestone 2");
-  });
+  .action(configCommand);
 
 // ─── Repos ──────────────────────────────────────────────────────────────────
 const repo = program.command("repo").description("Manage registered repos");
@@ -29,23 +32,17 @@ const repo = program.command("repo").description("Manage registered repos");
 repo
   .command("add <name> <path>")
   .description("Register a repo to be indexed")
-  .action(async (_name: string, _path: string) => {
-    console.log("TODO: repo add — Milestone 2");
-  });
+  .action(repoAddCommand);
 
 repo
   .command("list")
   .description("List all registered repos")
-  .action(async () => {
-    console.log("TODO: repo list — Milestone 2");
-  });
+  .action(repoListCommand);
 
 repo
   .command("remove <name>")
   .description("Remove a repo from the registry")
-  .action(async (_name: string) => {
-    console.log("TODO: repo remove — Milestone 2");
-  });
+  .action(repoRemoveCommand);
 
 // ─── Sync ───────────────────────────────────────────────────────────────────
 program
