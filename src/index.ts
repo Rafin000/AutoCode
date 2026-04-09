@@ -13,6 +13,11 @@ import {
   knowledgeStatsCommand,
 } from "./commands/knowledge.js";
 import { syncCommand } from "./commands/sync.js";
+import {
+  hookInstallCommand,
+  hookUninstallCommand,
+  hookListCommand,
+} from "./commands/hook.js";
 
 const program = new Command();
 
@@ -85,16 +90,17 @@ const hook = program.command("hook").description("Manage git hooks for auto-sync
 hook
   .command("install <name>")
   .description("Install a post-commit hook in the repo")
-  .action(async (_name: string) => {
-    console.log("TODO: hook install — Milestone 7");
-  });
+  .action(hookInstallCommand);
 
 hook
   .command("uninstall <name>")
   .description("Remove the post-commit hook from the repo")
-  .action(async (_name: string) => {
-    console.log("TODO: hook uninstall — Milestone 7");
-  });
+  .action(hookUninstallCommand);
+
+hook
+  .command("list")
+  .description("Show hook status for every registered repo")
+  .action(hookListCommand);
 
 // ─── Ask / Interview ────────────────────────────────────────────────────────
 program

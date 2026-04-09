@@ -126,15 +126,58 @@ npm run build
 ./bin/auto-coder --help
 ```
 
+## Auto-sync
+
+auto-coder ships with two complementary sync triggers so the knowledge
+base stays fresh without you remembering to run anything.
+
+### 1. Git hook (instant, local)
+
+```bash
+auto-coder hook install <repo-name>
+```
+
+Installs a `post-commit` hook into the repo. Every commit triggers a
+background `auto-coder sync <name> --quiet` run. Usually finishes in
+under a second thanks to diff-based incremental sync.
+
+To see which repos have hooks installed:
+
+```bash
+auto-coder hook list
+```
+
+To remove:
+
+```bash
+auto-coder hook uninstall <repo-name>
+```
+
+The hook is marker-guarded — uninstall only touches hooks that
+auto-coder installed, not any foreign hooks you may have.
+
+### 2. Daily cron (catches everything the hook misses)
+
+The git hook only fires on local commits. If you pull teammate work,
+commit from another machine, or merge via the GitHub UI, the hook
+doesn't run. A daily cron catches these cases:
+
+```cron
+# Add to `crontab -e`
+0 7 * * * /path/to/auto-coder sync --all > /tmp/auto-coder.log 2>&1
+```
+
+Incremental sync is cheap, so running daily has negligible cost.
+
 ## Milestone status
 
 - [x] M1 — Monorepo scaffold + infra
-- [ ] M2 — Config layer + types
-- [ ] M3 — State DB (SQLite)
-- [ ] M4 — Graph client (Neo4j)
-- [ ] M5 — Vector client + embedder
-- [ ] M6 — Sync pipeline (walker, extractor, processor)
-- [ ] M7 — Git hook installer + cron helper
+- [x] M2 — Config layer + types
+- [x] M3 — State DB (SQLite)
+- [x] M4 — Graph client (Neo4j)
+- [x] M5 — Vector client + embedder
+- [x] M6 — Sync pipeline (walker, extractor, processor)
+- [x] M7 — Git hook installer + cron helper
 - [ ] M8 — `ask` and `interview` commands
 
 ## License
