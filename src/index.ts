@@ -12,6 +12,7 @@ import {
   knowledgeTestVectorsCommand,
   knowledgeStatsCommand,
 } from "./commands/knowledge.js";
+import { syncCommand } from "./commands/sync.js";
 
 const program = new Command();
 
@@ -75,9 +76,8 @@ program
   .description("Sync one repo (or all with --all)")
   .option("--all", "Sync every registered repo")
   .option("--quiet", "Suppress output (used by git hooks)")
-  .action(async (_name: string | undefined, _opts: { all?: boolean; quiet?: boolean }) => {
-    console.log("TODO: sync — Milestone 6");
-  });
+  .option("--full", "Force a full re-scan (skip incremental diff)")
+  .action(syncCommand);
 
 // ─── Git hooks ──────────────────────────────────────────────────────────────
 const hook = program.command("hook").description("Manage git hooks for auto-sync");
