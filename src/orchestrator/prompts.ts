@@ -7,6 +7,10 @@ export interface BuildPromptInput {
   context: FeatureContext;
   /** Optional pre-approved plan markdown — injected into the implementation prompt */
   plan?: string;
+  /** Rework instructions from the user — injected into the rework prompt */
+  reworkInstructions?: string;
+  /** Previous rework history — so Claude knows what's already been tried */
+  reworkHistory?: Array<{ instructions: string; timestamp: string }>;
 }
 
 /**
@@ -160,6 +164,71 @@ ${context.markdown}
 - **Do NOT run the code or execute tests.**
 - **Do NOT install dependencies.**
 - If you can't plan this feature (e.g. the feature description is too unclear), write the result file with \`status: "failed"\` and explain in \`notes\`.
+
+Begin.`;
+}
+
+/**
+ * Rework prompt — asks Claude to modify the existing implementation
+ * based on reviewer feedback.
+ */
+export function buildReworkPrompt(input: BuildPromptInput): string {
+  const { featureId, title, description, context, reworkInstructions, reworkHistory } = input;
+  const resultFile = `.agent/results/result-${featureId}.json`;
+
+  const historySection =
+    reworkHistory && reworkHistory.length > 0
+      ? `\n## PREVIOUS REWORK INSTRUCTIONS\n\nAlready applied in earlier rounds — here for context only.\n\n${reworkHistory.map((r, i) => `${i + 1}. (${r.timestamp}) ${r.instructions}`).join("\n")}\n`
+      : "";
+
+  return `You are an expert software engineer reworking an existing feature based on reviewer feedback.
+
+The feature is already implemented on the current branch. Read the code, apply the changes below, and update the result file.
+
+## FEATURE
+
+**ID**: ${featureId}
+**Title**: ${title}
+
+**Description**:
+${description}
+
+---
+
+${context.markdown}
+${historySection}
+---
+
+## REWORK INSTRUCTIONS
+
+${reworkInstructions ?? "(no instructions provided)"}
+
+---
+
+## YOUR TASK
+
+1. Read the existing implementation on this branch.
+2. Apply the rework instructions. Only change what was asked for.
+3. Run tests if the repo has them and the changes could affect them.
+4. Write a result file to \`${resultFile}\`:
+
+\`\`\`json
+{
+  "status": "completed" | "failed",
+  "summary": "1-3 sentences describing what you changed",
+  "files_modified": ["src/foo.ts"],
+  "files_created": [],
+  "tests_run": "pass" | "fail" | "none",
+  "impact_report": "What changed, what might break, follow-ups",
+  "notes": "Anything else — or error message if failed"
+}
+\`\`\`
+
+## CONSTRAINTS
+
+- Do NOT commit or push. The calling tool handles git.
+- Only change what the rework instructions ask for.
+- If you cannot apply the rework, write the result file with status "failed".
 
 Begin.`;
 }

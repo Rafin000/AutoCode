@@ -34,6 +34,8 @@ export function initDb(): void {
 function runMigrations(db: Database.Database): void {
   // v3 → v4: add `implementation_plan` to features
   addColumnIfMissing(db, "features", "implementation_plan", "TEXT");
+  // v4 → v4b: add `rework_history` to features
+  addColumnIfMissing(db, "features", "rework_history", "TEXT DEFAULT '[]'");
 }
 
 function addColumnIfMissing(

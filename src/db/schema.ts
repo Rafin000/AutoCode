@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS features (
   test_results          TEXT,
   error_message         TEXT,
   tokens_used           TEXT,           -- JSON: { input, output }
+  rework_history        TEXT DEFAULT '[]',  -- JSON array of { instructions, timestamp }
   created_at            TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at            TEXT NOT NULL DEFAULT (datetime('now'))
 );

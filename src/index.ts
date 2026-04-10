@@ -24,6 +24,7 @@ import {
   featureCreateCommand,
   featureImplementCommand,
   featurePlanCommand,
+  featureReworkCommand,
   featureListCommand,
   featureStatusCommand,
   featureApproveCommand,
@@ -189,6 +190,13 @@ feature
   .command("plan <id>")
   .description("View the saved plan for a feature")
   .action(featurePlanCommand);
+
+feature
+  .command("rework <id>")
+  .description("Apply reviewer feedback to an implemented feature")
+  .requiredOption("-i, --instructions <text>", "Rework instructions from the reviewer")
+  .option("-r, --repo <name>", "Target repo")
+  .action(featureReworkCommand);
 
 feature
   .command("list")

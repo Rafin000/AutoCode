@@ -14,6 +14,7 @@ import { buildFeatureContext } from "../orchestrator/feature-context.js";
 import {
   buildImplementationPrompt,
   buildPlanningPrompt,
+  buildReworkPrompt,
 } from "../orchestrator/prompts.js";
 import {
   spawnClaudeCli,
@@ -210,6 +211,156 @@ export async function featurePlanCommand(id: string): Promise<void> {
   console.log(`# Plan for feature ${id} — ${feature.title}`);
   console.log();
   console.log(feature.implementation_plan);
+}
+
+/* ───── feature rework ────────────────────────────────────────────── */
+
+export interface FeatureReworkOptions {
+  instructions: string;
+  repo?: string;
+}
+
+/**
+ * Rework a feature based on reviewer feedback.
+ *
+ * Must be in `ready_for_review` status. Checks out the feature branch,
+ * spawns Claude with the rework prompt, stages + commits + pushes.
+ * The PR automatically updates on GitHub because we push to the same branch.
+ */
+export async function featureReworkCommand(
+  id: string,
+  opts: FeatureReworkOptions,
+): Promise<void> {
+  const config = loadConfig();
+  const feature = getFeature(id);
+  if (!feature) {
+    console.error(`No feature with id "${id}"`);
+    process.exit(1);
+  }
+  if (feature.status !== "ready_for_review") {
+    console.error(`Feature is in state "${feature.status}" — expected "ready_for_review"`);
+    process.exit(1);
+  }
+  if (!feature.branch_name) {
+    console.error("Feature has no branch_name — can't rework without a branch.");
+    process.exit(1);
+  }
+
+  const repo = resolveRepo(config, opts.repo ?? feature.repo);
+
+  try {
+    // Checkout the existing feature branch
+    const { execSync } = await import("node:child_process");
+    execSync(`git checkout ${feature.branch_name}`, {
+      cwd: repo.path,
+      stdio: "pipe",
+    });
+
+    console.log(`Reworking feature ${feature.id} on branch ${feature.branch_name}`);
+    console.log(`  Instructions: ${opts.instructions}`);
+
+    // Assemble context
+    console.log("  Assembling context...");
+    const context = await buildFeatureContext(
+      config,
+      repo,
+      feature.id,
+      feature.description,
+    );
+    console.log(`  ✓ Got ${context.sources.length} relevant documents`);
+
+    // Update status
+    updateFeature(feature.id, { status: "implementing" as FeatureStatus });
+
+    // Build rework prompt
+    const prompt = buildReworkPrompt({
+      featureId: feature.id,
+      title: feature.title,
+      description: feature.description,
+      context,
+      plan: feature.implementation_plan ?? undefined,
+      reworkInstructions: opts.instructions,
+      reworkHistory: feature.rework_history,
+    });
+
+    console.log("  Spawning Claude CLI for rework...");
+    console.log();
+    const spawnResult = await spawnClaudeCli({
+      prompt,
+      workingDir: repo.path,
+      onEvent: defaultEventPrinter,
+    });
+    console.log();
+
+    if (spawnResult.exitCode !== 0) {
+      throw new Error(`Claude CLI exited with code ${spawnResult.exitCode}`);
+    }
+    console.log(
+      `  ✓ Claude finished — ${spawnResult.eventCount} events in ${(spawnResult.elapsedMs / 1000).toFixed(1)}s`,
+    );
+
+    // Read result file
+    const resultPath = `${repo.path}/.agent/results/result-${feature.id}.json`;
+    const fs = await import("node:fs");
+    if (!fs.existsSync(resultPath)) {
+      throw new Error("Claude did not write the result file.");
+    }
+    const agentResult = JSON.parse(
+      fs.readFileSync(resultPath, "utf-8"),
+    ) as AgentImplementResult;
+
+    if (agentResult.status === "failed") {
+      updateFeature(feature.id, {
+        status: "failed",
+        error_message: agentResult.notes ?? "Rework failed",
+      });
+      console.error(`✗ Rework failed: ${agentResult.notes ?? "(no notes)"}`);
+      process.exit(1);
+    }
+
+    // Stage + commit + push (same branch — PR updates automatically)
+    console.log("  Staging and committing rework...");
+    stageAll(repo.path);
+    if (!hasUncommittedChanges(repo.path)) {
+      console.log("  (no changes — rework may have been a no-op)");
+    } else {
+      const { execSync: exec2 } = await import("node:child_process");
+      exec2(
+        `git commit -m "Rework: ${opts.instructions.slice(0, 60)}\n\n[feature: ${feature.id}]"`,
+        { cwd: repo.path, stdio: "pipe" },
+      );
+      pushBranch(repo.path, feature.branch_name);
+      console.log("  ✓ Pushed rework to existing branch");
+    }
+
+    // Append to rework history and update status
+    const newHistory = [
+      ...feature.rework_history,
+      { instructions: opts.instructions, timestamp: new Date().toISOString() },
+    ];
+    updateFeature(feature.id, {
+      status: "ready_for_review" as FeatureStatus,
+      rework_history: newHistory,
+      files_modified: agentResult.files_modified ?? feature.files_modified,
+      files_created: agentResult.files_created ?? feature.files_created,
+      impact_report: agentResult.impact_report ?? feature.impact_report,
+      test_results: agentResult.tests_run ?? feature.test_results,
+    });
+
+    console.log();
+    console.log(`✓ Rework applied — feature ${feature.id} back to ready_for_review`);
+    if (agentResult.summary) console.log(`  ${agentResult.summary}`);
+    if (feature.pr_url) console.log(`  PR: ${feature.pr_url} (updated)`);
+    console.log(`  Rework history: ${newHistory.length} round(s)`);
+  } catch (err) {
+    updateFeature(feature.id, {
+      status: "failed",
+      error_message: (err as Error).message,
+    });
+    console.error();
+    console.error(`✗ Rework failed: ${(err as Error).message}`);
+    process.exit(1);
+  }
 }
 
 /* ───── runPlanning (shared helper) ──────────────────────────────── */

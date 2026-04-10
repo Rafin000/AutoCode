@@ -10,6 +10,11 @@ export type FeatureStatus =
   | "approved"
   | "failed";
 
+export interface ReworkEntry {
+  instructions: string;
+  timestamp: string;
+}
+
 export interface FeatureRow {
   id: string;
   repo: string;
@@ -26,6 +31,7 @@ export interface FeatureRow {
   test_results: string | null;
   error_message: string | null;
   tokens_used: { input?: number; output?: number } | null;
+  rework_history: ReworkEntry[];
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +52,7 @@ interface RawFeatureRow {
   test_results: string | null;
   error_message: string | null;
   tokens_used: string | null;
+  rework_history: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +66,9 @@ function parseRow(raw: RawFeatureRow | undefined): FeatureRow | null {
     tokens_used: raw.tokens_used
       ? (JSON.parse(raw.tokens_used) as { input?: number; output?: number })
       : null,
+    rework_history: raw.rework_history
+      ? (JSON.parse(raw.rework_history) as ReworkEntry[])
+      : [],
   };
 }
 
@@ -102,6 +112,7 @@ export function listFeatures(repo?: string): FeatureRow[] {
 export interface FeatureUpdate {
   status?: FeatureStatus;
   implementation_plan?: string | null;
+  rework_history?: ReworkEntry[];
   branch_name?: string | null;
   files_modified?: string[] | null;
   files_created?: string[] | null;
@@ -129,6 +140,8 @@ export function updateFeature(id: string, fields: FeatureUpdate): void {
 
   if (fields.status !== undefined) set("status", fields.status);
   if (fields.implementation_plan !== undefined) set("implementation_plan", fields.implementation_plan);
+  if (fields.rework_history !== undefined)
+    set("rework_history", JSON.stringify(fields.rework_history));
   if (fields.branch_name !== undefined) set("branch_name", fields.branch_name);
   if (fields.files_modified !== undefined)
     set("files_modified", fields.files_modified ? JSON.stringify(fields.files_modified) : null);
