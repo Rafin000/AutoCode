@@ -10,8 +10,11 @@ export function seedDefaults(): void {
   ensureWorkflowDirs();
   seedFile(path.join(SKILLS_DIR, "qa.yaml"), QA_SKILL);
   seedFile(path.join(SKILLS_DIR, "interview-coach.yaml"), INTERVIEW_SKILL);
+  seedFile(path.join(SKILLS_DIR, "content-marketer.yaml"), MARKETER_SKILL);
   seedFile(path.join(PIPELINES_DIR, "qa.yaml"), QA_PIPELINE);
   seedFile(path.join(PIPELINES_DIR, "interview.yaml"), INTERVIEW_PIPELINE);
+  seedFile(path.join(PIPELINES_DIR, "marketing-mock.yaml"), MARKETING_MOCK_PIPELINE);
+  seedFile(path.join(PIPELINES_DIR, "marketing-bluesky.yaml"), MARKETING_BLUESKY_PIPELINE);
 }
 
 function seedFile(filePath: string, content: string): void {
@@ -134,4 +137,140 @@ steps:
         {{ inputs.question }}
 
         Draft my answer in STAR format using ONLY the context above.
+`;
+
+const MARKETER_SKILL = `name: content-marketer
+description: Writes technical social media posts grounded in your real work
+provider: anthropic
+model: claude-sonnet-4-6
+system_prompt: |
+  You are a technical content marketer writing social media posts for a developer.
+  You have access to the developer's real projects via retrieved context.
+
+  Rules:
+  - Write 3 post variants: short (under 300 chars), medium (under 600 chars), long (under 1500 chars)
+  - Ground every claim in the provided context — no invented features or metrics
+  - Tone: first-person, technical, specific, opinionated but not arrogant
+  - Start with a hook (a question, a bold statement, or a surprising fact)
+  - End with a call to action or a takeaway
+  - Use concrete details: file names, tech names, architecture decisions
+  - No hashtags unless explicitly requested
+  - No emojis unless explicitly requested
+  - Label each variant clearly: ## Short / ## Medium / ## Long
+temperature: 0.6
+max_tokens: 2048
+`;
+
+const MARKETING_MOCK_PIPELINE = `name: marketing-mock
+description: Draft a post from a topic, review, publish to mock (for testing)
+inputs:
+  topic:
+    type: string
+    required: true
+  repo:
+    type: string
+    required: false
+
+steps:
+  - id: context
+    type: retrieve_context
+    description: Find relevant content from your repos
+    with:
+      query: "{{ inputs.topic }}"
+      repo: "{{ inputs.repo }}"
+      top_k: 12
+
+  - id: draft
+    type: llm_generate
+    description: Draft post variants
+    with:
+      skill: content-marketer
+      user_prompt: |
+        {{ steps.context.output.markdown }}
+
+        ---
+
+        ## Topic
+        {{ inputs.topic }}
+
+        Write 3 post variants (short, medium, long) grounded in the context above.
+
+  - id: save
+    type: save_draft
+    description: Save the draft for review
+    with:
+      content: "{{ steps.draft.output.text }}"
+      kind: social_post
+      topic: "{{ inputs.topic }}"
+
+  - id: review
+    type: human_review
+    description: Review the draft before publishing
+    with:
+      prompt: "Review your post draft. Resume to publish, or cancel."
+      draft_id: "{{ steps.save.output.draft_id }}"
+
+  - id: post
+    type: publish
+    description: Publish to mock channel
+    with:
+      channel: mock
+      content: "{{ steps.draft.output.text }}"
+`;
+
+const MARKETING_BLUESKY_PIPELINE = `name: marketing-bluesky
+description: Draft a post from a topic, review, publish to Bluesky
+inputs:
+  topic:
+    type: string
+    required: true
+  repo:
+    type: string
+    required: false
+
+steps:
+  - id: context
+    type: retrieve_context
+    description: Find relevant content from your repos
+    with:
+      query: "{{ inputs.topic }}"
+      repo: "{{ inputs.repo }}"
+      top_k: 12
+
+  - id: draft
+    type: llm_generate
+    description: Draft post variants
+    with:
+      skill: content-marketer
+      user_prompt: |
+        {{ steps.context.output.markdown }}
+
+        ---
+
+        ## Topic
+        {{ inputs.topic }}
+
+        Write 3 post variants (short, medium, long) grounded in the context above.
+
+  - id: save
+    type: save_draft
+    description: Save the draft for review
+    with:
+      content: "{{ steps.draft.output.text }}"
+      kind: bluesky_post
+      topic: "{{ inputs.topic }}"
+
+  - id: review
+    type: human_review
+    description: Review before publishing to Bluesky
+    with:
+      prompt: "Review your Bluesky post. Resume to publish."
+      draft_id: "{{ steps.save.output.draft_id }}"
+
+  - id: post
+    type: publish
+    description: Post to Bluesky
+    with:
+      channel: bluesky
+      content: "{{ steps.draft.output.text }}"
 `;

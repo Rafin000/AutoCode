@@ -1,61 +1,54 @@
-import { loadConfig } from "../config/loader.js";
-import { assembleContext } from "../retriever/assembler.js";
-import { callLLM } from "../agent/llm.js";
-
-const ASK_SYSTEM_PROMPT = `You are a personal AI assistant with access to the user's own work — their code, documentation, and configuration — retrieved via semantic search.
-
-When answering:
-- Ground every factual claim in the provided context
-- Cite sources using the [DOC-N] markers from the context block
-- If the context doesn't contain the answer, say so honestly — don't invent details
-- Prefer specific examples (file paths, function names, technologies) over vague summaries
-- Keep the tone conversational but technically precise
-- 2-5 paragraphs usually; go longer only if the question genuinely needs it`;
+import { loadPipeline, ensureWorkflowDirs } from "../workflow/loader.js";
+import { runPipeline } from "../workflow/engine.js";
 
 export interface AskOptions {
   repo?: string;
   topK?: string;
 }
 
+/**
+ * `auto-coder ask` is now a thin wrapper around the `qa` pipeline.
+ * This maintains backward compatibility while routing everything
+ * through the workflow engine.
+ */
 export async function askCommand(
   question: string,
   opts: AskOptions,
 ): Promise<void> {
-  const config = loadConfig();
+  ensureWorkflowDirs();
 
-  console.log("• Retrieving relevant context...");
-  const context = await assembleContext(config, question, {
-    repo: opts.repo,
-    topK: opts.topK ? parseInt(opts.topK, 10) : undefined,
-  });
-
-  if (context.sources.length === 0 && !opts.repo) {
-    console.log(
-      "  (no matching documents found — make sure you've run `auto-coder sync <name>`)",
-    );
-  } else {
-    console.log(`  ✓ Got ${context.sources.length} relevant documents`);
+  let pipeline;
+  try {
+    pipeline = loadPipeline("qa");
+  } catch {
+    console.error("qa pipeline not found. Run `auto-coder init` to seed default pipelines.");
+    process.exit(1);
   }
 
-  console.log(`• Asking ${config.llm.provider} (${config.llm.model})...`);
-  const userPrompt = `${context.markdown}\n\n---\n\n## Question\n${question}`;
+  const inputs: Record<string, unknown> = { question };
+  if (opts.repo) inputs.repo = opts.repo;
 
-  try {
-    const response = await callLLM(
-      { system: ASK_SYSTEM_PROMPT, user: userPrompt },
-      config.llm,
-    );
+  const ctx = await runPipeline(pipeline, inputs);
 
-    console.log();
-    console.log("━".repeat(70));
-    console.log(response.text.trim());
-    console.log("━".repeat(70));
-    console.log();
+  if (ctx.status === "completed") {
+    const answerStep = ctx.steps["answer"];
+    if (answerStep?.output?.text) {
+      console.log();
+      console.log("━".repeat(70));
+      console.log(String(answerStep.output.text).trim());
+      console.log("━".repeat(70));
+    }
 
-    // Print sources so the user can verify
-    if (context.sources.length > 0) {
+    // Show sources from the context step
+    const contextStep = ctx.steps["context"];
+    const sources = contextStep?.output?.sources as Array<{
+      score: number;
+      payload: Record<string, unknown>;
+    }> | undefined;
+    if (sources && sources.length > 0) {
+      console.log();
       console.log("Sources:");
-      context.sources.forEach((s, i) => {
+      sources.forEach((s, i) => {
         const p = s.payload;
         console.log(
           `  [DOC-${i + 1}] ${String(p.file_path ?? "")} · ${String(p.doc_type ?? "")}${p.anchor ? ` · ${String(p.anchor)}` : ""}  (score ${s.score.toFixed(3)})`,
@@ -63,17 +56,13 @@ export async function askCommand(
       });
     }
 
-    // Usage info
-    if (response.inputTokens || response.outputTokens) {
+    // Token usage
+    const answerOut = answerStep?.output;
+    if (answerOut?.input_tokens || answerOut?.output_tokens) {
       console.log();
-      console.log(
-        `Tokens: ${response.inputTokens ?? "?"} in · ${response.outputTokens ?? "?"} out`,
-      );
+      console.log(`Tokens: ${answerOut.input_tokens ?? "?"} in · ${answerOut.output_tokens ?? "?"} out`);
     }
-  } catch (err) {
-    console.error();
-    console.error("✗ LLM call failed:");
-    console.error("  ", (err as Error).message);
+  } else {
     process.exit(1);
   }
 }

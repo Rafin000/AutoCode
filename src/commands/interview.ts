@@ -1,66 +1,51 @@
-import { loadConfig } from "../config/loader.js";
-import { assembleContext } from "../retriever/assembler.js";
-import { callLLM } from "../agent/llm.js";
-
-const INTERVIEW_SYSTEM_PROMPT = `You are helping the user prepare answers for technical job interviews. You have access to their real projects and code via retrieved context.
-
-Your job is to answer recruiter/interviewer questions **in the user's voice**, using ONLY the projects and technologies they actually have in the context. The goal is an answer they could deliver verbatim in an interview.
-
-Answer structure — STAR format:
-  **Situation**: set the scene using a real project from the context (mention the project by name)
-  **Task**: what they needed to do
-  **Action**: what they actually built, with specific technologies and file names where helpful
-  **Result**: the outcome, lesson learned, or skill demonstrated
-
-Rules:
-- ONLY use projects, technologies, and code that appear in the provided context
-- NEVER invent projects, metrics ("reduced latency by 40%"), or team sizes
-- If the context doesn't contain a relevant experience, say so honestly and suggest a pivot (e.g. "I don't have direct production experience with X, but here's a related project that shows the underlying skill")
-- Use "I" consistently (first person) — this is the user speaking
-- Cite source docs inline as [DOC-N] where relevant so the user can verify
-- 3-5 paragraphs, conversational but specific
-- End with one sentence summarizing the key takeaway or skill demonstrated`;
+import { loadPipeline, ensureWorkflowDirs } from "../workflow/loader.js";
+import { runPipeline } from "../workflow/engine.js";
 
 export interface InterviewOptions {
   repo?: string;
   topK?: string;
 }
 
+/**
+ * `auto-coder interview` is now a thin wrapper around the `interview` pipeline.
+ */
 export async function interviewCommand(
   question: string,
   opts: InterviewOptions,
 ): Promise<void> {
-  const config = loadConfig();
+  ensureWorkflowDirs();
 
-  console.log("• Retrieving relevant experience...");
-  const context = await assembleContext(config, question, {
-    repo: opts.repo,
-    topK: opts.topK ? parseInt(opts.topK, 10) : 10,
-  });
-  console.log(`  ✓ Got ${context.sources.length} relevant documents`);
-
-  console.log(`• Drafting answer with ${config.llm.provider} (${config.llm.model})...`);
-  const userPrompt = `${context.markdown}\n\n---\n\n## Interview question\n${question}\n\nDraft my answer in STAR format, using ONLY what's in the context above.`;
-
+  let pipeline;
   try {
-    const response = await callLLM(
-      {
-        system: INTERVIEW_SYSTEM_PROMPT,
-        user: userPrompt,
-        temperature: 0.5, // slightly higher for more natural phrasing
-      },
-      config.llm,
-    );
+    pipeline = loadPipeline("interview");
+  } catch {
+    console.error("interview pipeline not found. Run `auto-coder init` to seed defaults.");
+    process.exit(1);
+  }
 
-    console.log();
-    console.log("━".repeat(70));
-    console.log(response.text.trim());
-    console.log("━".repeat(70));
-    console.log();
+  const inputs: Record<string, unknown> = { question };
+  if (opts.repo) inputs.repo = opts.repo;
 
-    if (context.sources.length > 0) {
+  const ctx = await runPipeline(pipeline, inputs);
+
+  if (ctx.status === "completed") {
+    const answerStep = ctx.steps["answer"];
+    if (answerStep?.output?.text) {
+      console.log();
+      console.log("━".repeat(70));
+      console.log(String(answerStep.output.text).trim());
+      console.log("━".repeat(70));
+    }
+
+    const contextStep = ctx.steps["context"];
+    const sources = contextStep?.output?.sources as Array<{
+      score: number;
+      payload: Record<string, unknown>;
+    }> | undefined;
+    if (sources && sources.length > 0) {
+      console.log();
       console.log("Grounded in:");
-      context.sources.forEach((s, i) => {
+      sources.forEach((s, i) => {
         const p = s.payload;
         console.log(
           `  [DOC-${i + 1}] ${String(p.file_path ?? "")} · ${String(p.doc_type ?? "")}${p.anchor ? ` · ${String(p.anchor)}` : ""}`,
@@ -68,16 +53,13 @@ export async function interviewCommand(
       });
     }
 
-    if (response.inputTokens || response.outputTokens) {
+    if (answerStep?.output?.input_tokens || answerStep?.output?.output_tokens) {
       console.log();
       console.log(
-        `Tokens: ${response.inputTokens ?? "?"} in · ${response.outputTokens ?? "?"} out`,
+        `Tokens: ${answerStep.output.input_tokens ?? "?"} in · ${answerStep.output.output_tokens ?? "?"} out`,
       );
     }
-  } catch (err) {
-    console.error();
-    console.error("✗ LLM call failed:");
-    console.error("  ", (err as Error).message);
+  } else {
     process.exit(1);
   }
 }
