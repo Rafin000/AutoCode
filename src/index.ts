@@ -25,6 +25,7 @@ import {
   featureImplementCommand,
   featurePlanCommand,
   featureReworkCommand,
+  featureTestContextCommand,
   featureListCommand,
   featureStatusCommand,
   featureApproveCommand,
@@ -190,6 +191,14 @@ feature
   .command("plan <id>")
   .description("View the saved plan for a feature")
   .action(featurePlanCommand);
+
+feature
+  .command("test-context")
+  .description("Preview the prompt Claude would receive — no feature created, no Claude spawned")
+  .requiredOption("-t, --title <title>", "Feature title")
+  .requiredOption("-d, --description <desc>", "Feature description")
+  .option("-r, --repo <name>", "Target repo")
+  .action(featureTestContextCommand);
 
 feature
   .command("rework <id>")

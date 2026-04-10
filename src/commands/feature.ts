@@ -213,6 +213,56 @@ export async function featurePlanCommand(id: string): Promise<void> {
   console.log(feature.implementation_plan);
 }
 
+/* ───── feature test-context ──────────────────────────────────────── */
+
+export interface FeatureTestContextOptions {
+  title: string;
+  description: string;
+  repo?: string;
+}
+
+/**
+ * Preview the exact prompt that would be sent to Claude, without
+ * creating a feature row or spawning anything. Useful for debugging
+ * context quality before committing to a real feature.
+ */
+export async function featureTestContextCommand(
+  opts: FeatureTestContextOptions,
+): Promise<void> {
+  const config = loadConfig();
+  const repo = resolveRepo(config, opts.repo);
+
+  console.log(`Previewing context for: ${opts.title}`);
+  console.log(`  Repo: ${repo.name} (${repo.path})`);
+  console.log();
+
+  const context = await buildFeatureContext(
+    config,
+    repo,
+    "test-preview",
+    opts.description,
+  );
+
+  console.log(`Retrieved ${context.sources.length} documents from the knowledge base.`);
+  console.log();
+
+  const prompt = buildImplementationPrompt({
+    featureId: "test-preview",
+    title: opts.title,
+    description: opts.description,
+    context,
+  });
+
+  console.log("━".repeat(70));
+  console.log(prompt);
+  console.log("━".repeat(70));
+  console.log();
+  console.log(`Total prompt length: ${prompt.length} chars`);
+  console.log(`Estimated tokens: ~${Math.ceil(prompt.length / 4)}`);
+  console.log();
+  console.log("This is what Claude would receive. No feature was created, no Claude was spawned.");
+}
+
 /* ───── feature rework ────────────────────────────────────────────── */
 
 export interface FeatureReworkOptions {
