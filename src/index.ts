@@ -33,6 +33,7 @@ import {
 } from "./commands/feature.js";
 import { getPackageVersion, versionCommand } from "./commands/version.js";
 import { watchCommand } from "./commands/watch.js";
+import { skillListCommand, skillShowCommand, skillValidateCommand } from "./commands/skill.js";
 import {
   runExecuteCommand,
   runListCommand,
@@ -127,6 +128,13 @@ hook
   .command("list")
   .description("Show hook status for every registered repo")
   .action(hookListCommand);
+
+// ─── Skills ─────────────────────────────────────────────────────────────────
+const skill = program.command("skill").description("Manage reusable LLM personas");
+
+skill.command("list").description("List all defined skills").action(skillListCommand);
+skill.command("show <name>").description("Show a skill's full config + system prompt").action(skillShowCommand);
+skill.command("validate").description("Check all skills for issues").action(skillValidateCommand);
 
 // ─── Watch ──────────────────────────────────────────────────────────────────
 program
