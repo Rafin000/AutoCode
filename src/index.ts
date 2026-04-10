@@ -35,6 +35,10 @@ import { getPackageVersion, versionCommand } from "./commands/version.js";
 import { watchCommand } from "./commands/watch.js";
 import { skillListCommand, skillShowCommand, skillValidateCommand } from "./commands/skill.js";
 import {
+  rulesAddCommand, rulesListCommand, rulesGetCommand,
+  rulesDisableCommand, rulesEnableCommand, rulesDeleteCommand,
+} from "./commands/rules.js";
+import {
   runExecuteCommand,
   runListCommand,
   runShowCommand,
@@ -137,6 +141,32 @@ const skill = program.command("skill").description("Manage reusable LLM personas
 skill.command("list").description("List all defined skills").action(skillListCommand);
 skill.command("show <name>").description("Show a skill's full config + system prompt").action(skillShowCommand);
 skill.command("validate").description("Check all skills for issues").action(skillValidateCommand);
+
+// ─── Rules engine ───────────────────────────────────────────────────────────
+const rules = program.command("rules").description("Manage hard rules, soft rules, and anti-patterns");
+
+rules.command("add")
+  .description("Add a new rule")
+  .requiredOption("--type <type>", "hard_rule | soft_rule | anti_pattern")
+  .requiredOption("--rule <text>", "The rule text")
+  .requiredOption("--scope <scope>", '"all" or a repo name')
+  .option("--severity <level>", "critical | high | medium | low")
+  .option("--confidence <n>", "0.0-1.0 (soft_rule only)")
+  .option("--check-pattern <text>", "Pattern to check for violations")
+  .option("--prevention <text>", "How to avoid violating")
+  .action(rulesAddCommand);
+
+rules.command("list")
+  .description("List rules")
+  .option("--type <type>", "Filter by type")
+  .option("--scope <scope>", "Filter by scope")
+  .option("--active", "Only active rules")
+  .action(rulesListCommand);
+
+rules.command("get <id>").description("Show full rule details").action(rulesGetCommand);
+rules.command("disable <id>").description("Disable a rule").action(rulesDisableCommand);
+rules.command("enable <id>").description("Enable a rule").action(rulesEnableCommand);
+rules.command("delete <id>").description("Delete a rule").action(rulesDeleteCommand);
 
 // ─── Watch ──────────────────────────────────────────────────────────────────
 program

@@ -90,6 +90,30 @@ CREATE TABLE IF NOT EXISTS workflow_runs (
 
 CREATE INDEX IF NOT EXISTS idx_runs_pipeline ON workflow_runs(pipeline_name);
 CREATE INDEX IF NOT EXISTS idx_runs_status   ON workflow_runs(status);
+
+-- Rules engine (added in schema v5).
+-- Types: hard_rule (must follow), soft_rule (pattern with confidence), anti_pattern (what NOT to do)
+CREATE TABLE IF NOT EXISTS rules (
+  id              TEXT PRIMARY KEY,
+  type            TEXT NOT NULL,        -- hard_rule | soft_rule | anti_pattern
+  rule            TEXT NOT NULL,        -- the rule text
+  scope           TEXT NOT NULL,        -- "all" or a specific repo name
+  severity        TEXT,                 -- critical | high | medium | low
+  confidence      REAL,                 -- 0.0-1.0 (soft_rule only)
+  source          TEXT,                 -- "manual" | "bootstrap" | feature_id
+  source_detail   TEXT,
+  times_applied   INTEGER DEFAULT 0,
+  times_violated  INTEGER DEFAULT 0,
+  check_pattern   TEXT,                 -- regex or keyword to check for violations
+  prevention      TEXT,                 -- how to avoid violating (anti_pattern)
+  active          INTEGER DEFAULT 1,
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_rules_type   ON rules(type);
+CREATE INDEX IF NOT EXISTS idx_rules_scope  ON rules(scope);
+CREATE INDEX IF NOT EXISTS idx_rules_active ON rules(active);
 `;
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
