@@ -34,6 +34,7 @@ import {
 import { getPackageVersion, versionCommand } from "./commands/version.js";
 import { watchCommand } from "./commands/watch.js";
 import { linkCommand } from "./commands/link.js";
+import { startServer } from "./api/server.js";
 import { skillListCommand, skillShowCommand, skillValidateCommand } from "./commands/skill.js";
 import {
   rulesAddCommand, rulesListCommand, rulesGetCommand,
@@ -168,6 +169,17 @@ rules.command("get <id>").description("Show full rule details").action(rulesGetC
 rules.command("disable <id>").description("Disable a rule").action(rulesDisableCommand);
 rules.command("enable <id>").description("Enable a rule").action(rulesEnableCommand);
 rules.command("delete <id>").description("Delete a rule").action(rulesDeleteCommand);
+
+// ─── HTTP API server ────────────────────────────────────────────────────────
+program
+  .command("serve")
+  .description("Start the HTTP API server (for webhooks + future frontend)")
+  .option("-p, --port <number>", "Port to listen on", "3000")
+  .action(async (opts: { port: string }) => {
+    const { initDb } = await import("./db/init.js");
+    initDb();
+    startServer(parseInt(opts.port, 10));
+  });
 
 // ─── Cross-service linking ───────────────────────────────────────────────────
 program
