@@ -31,6 +31,7 @@ import {
   featureApproveCommand,
 } from "./commands/feature.js";
 import { getPackageVersion, versionCommand } from "./commands/version.js";
+import { watchCommand } from "./commands/watch.js";
 import {
   runExecuteCommand,
   runListCommand,
@@ -125,6 +126,14 @@ hook
   .command("list")
   .description("Show hook status for every registered repo")
   .action(hookListCommand);
+
+// ─── Watch ──────────────────────────────────────────────────────────────────
+program
+  .command("watch")
+  .description("Poll registered repos for new commits and auto-sync")
+  .option("--interval <seconds>", "Poll interval in seconds (default: 60, min: 5)", "60")
+  .option("-r, --repo <name>", "Watch a single repo instead of all")
+  .action(watchCommand);
 
 // ─── Workflow engine (pipelines + runs) ─────────────────────────────────────
 const run = program
