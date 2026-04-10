@@ -2,6 +2,7 @@ import { configExists, createDefaultConfig } from "../config/loader.js";
 import { CONFIG_DIR, CONFIG_FILE, DB_FILE } from "../config/paths.js";
 import { initDb } from "../db/init.js";
 import { dbExists } from "../db/client.js";
+import { seedDefaults } from "../skills/defaults.js";
 
 export async function initCommand(): Promise<void> {
   const hadConfig = configExists();
@@ -22,6 +23,9 @@ export async function initCommand(): Promise<void> {
   } else {
     console.log(`• DB already exists at ${DB_FILE}`);
   }
+
+  // Seed default skills + pipelines (idempotent — skips existing files)
+  seedDefaults();
 
   if (hadConfig && hadDb) {
     console.log("Nothing to do — run `auto-coder config` to view current setup.");
