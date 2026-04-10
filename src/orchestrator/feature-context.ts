@@ -25,6 +25,9 @@ export async function buildFeatureContext(
   const assembled = await assembleContext(config, description, {
     repo: repo.name,
     topK: 12,
+    includeRules: true,
+    includeConflicts: true,
+    excludeFeatureId: featureId,
   });
 
   const branchName = `agent/${featureId}`;
