@@ -17,6 +17,9 @@ export const NODE_LABELS = [
   "Topic",        // domain concept (rate limiting, retry, auth)
   "Concept",      // any other named entity worth tracking
   "Document",     // README, blog post, CV section
+  "HardRule",     // inviolable constraint
+  "SoftRule",     // learned pattern with confidence score
+  "AntiPattern",  // what NOT to do
 ] as const;
 
 export type NodeLabel = (typeof NODE_LABELS)[number];
@@ -29,6 +32,13 @@ export const EDGE_TYPES = [
   "ABOUT",         // Function ─ABOUT→     Topic
   "MENTIONS",      // Document ─MENTIONS→  Concept
   "DEFINED_IN",    // Function ─DEFINED_IN→ Repo (reverse convenience)
+  "CONSTRAINS",    // HardRule ─CONSTRAINS→ Repo / Function / Technology
+  "APPLIES_IN",    // SoftRule ─APPLIES_IN→ Repo
+  "APPLIES_TO",    // SoftRule ─APPLIES_TO→ Function / Technology
+  "WARNS_ABOUT",   // AntiPattern ─WARNS_ABOUT→ Repo / Function
+  "CALLS",         // Function ─CALLS→ Function (cross-service)
+  "BREAKS_IF_CHANGED", // cross-service dependency
+  "REFERENCES",    // generic cross-reference
 ] as const;
 
 export type EdgeType = (typeof EDGE_TYPES)[number];
