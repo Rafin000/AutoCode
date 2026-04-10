@@ -33,6 +33,7 @@ import {
 } from "./commands/feature.js";
 import { getPackageVersion, versionCommand } from "./commands/version.js";
 import { watchCommand } from "./commands/watch.js";
+import { linkCommand } from "./commands/link.js";
 import { skillListCommand, skillShowCommand, skillValidateCommand } from "./commands/skill.js";
 import {
   rulesAddCommand, rulesListCommand, rulesGetCommand,
@@ -167,6 +168,12 @@ rules.command("get <id>").description("Show full rule details").action(rulesGetC
 rules.command("disable <id>").description("Disable a rule").action(rulesDisableCommand);
 rules.command("enable <id>").description("Enable a rule").action(rulesEnableCommand);
 rules.command("delete <id>").description("Delete a rule").action(rulesDeleteCommand);
+
+// ─── Cross-service linking ───────────────────────────────────────────────────
+program
+  .command("link <svc1> <svc2>")
+  .description("Analyze two repos for cross-service dependencies")
+  .action(linkCommand);
 
 // ─── Watch ──────────────────────────────────────────────────────────────────
 program
