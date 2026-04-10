@@ -38,6 +38,8 @@ import {
   runExecuteCommand,
   runListCommand,
   runShowCommand,
+  runResumeCommand,
+  runCancelCommand,
   runPipelinesCommand,
 } from "./commands/run.js";
 
@@ -177,6 +179,17 @@ run
   .command("show <id>")
   .description("Show full details for a single run")
   .action(runShowCommand);
+
+run
+  .command("resume <id>")
+  .description("Resume a paused pipeline run")
+  .option("-c, --content <text>", "Approved content to pass to the review step")
+  .action(runResumeCommand);
+
+run
+  .command("cancel <id>")
+  .description("Cancel and delete a running or paused pipeline run")
+  .action(runCancelCommand);
 
 run
   .command("pipelines")

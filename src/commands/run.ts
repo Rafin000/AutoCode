@@ -1,6 +1,6 @@
 import { loadPipeline, listPipelines, ensureWorkflowDirs } from "../workflow/loader.js";
-import { runPipeline } from "../workflow/engine.js";
-import { listRuns, getRun } from "../db/runs.js";
+import { runPipeline, resumeRun } from "../workflow/engine.js";
+import { listRuns, getRun, deleteRun } from "../db/runs.js";
 
 /* ───── parse --input flags ───────────────────────────────────────── */
 
@@ -131,6 +131,39 @@ export async function runShowCommand(id: string): Promise<void> {
       console.log(`  output: ${truncated}`);
     }
   }
+}
+
+/* ───── run resume ────────────────────────────────────────────────── */
+
+export async function runResumeCommand(
+  id: string,
+  opts: { content?: string },
+): Promise<void> {
+  try {
+    const ctx = await resumeRun(id, { approvedContent: opts.content ?? "" });
+    if (ctx.status === "failed") {
+      process.exit(1);
+    }
+  } catch (err) {
+    console.error(`✗ ${(err as Error).message}`);
+    process.exit(1);
+  }
+}
+
+/* ───── run cancel ────────────────────────────────────────────────── */
+
+export async function runCancelCommand(id: string): Promise<void> {
+  const run = getRun(id);
+  if (!run) {
+    console.error(`No run with id "${id}"`);
+    process.exit(1);
+  }
+  if (run.status === "completed" || run.status === "failed") {
+    console.log(`Run is already "${run.status}" — nothing to cancel.`);
+    return;
+  }
+  deleteRun(id);
+  console.log(`✓ Run ${id} cancelled and deleted.`);
 }
 
 /* ───── run pipelines ─────────────────────────────────────────────── */

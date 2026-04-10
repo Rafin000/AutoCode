@@ -6,7 +6,8 @@ import {
 } from "./types.js";
 import { getStepExecutor, listStepTypes } from "./registry.js";
 import { resolveTemplate } from "./templating.js";
-import { createRun, persistRun } from "../db/runs.js";
+import { createRun, persistRun, getRun } from "../db/runs.js";
+import { loadPipeline } from "./loader.js";
 
 /**
  * The workflow engine.
@@ -157,6 +158,144 @@ function validateInputs(
       inputs[name] = info.default;
     }
   }
+}
+
+/**
+ * Resume a paused run from where it left off.
+ *
+ * Loads the pipeline definition, finds the paused step, re-enters it
+ * with __resumed=true so the step executor knows it's a resumption,
+ * then continues with remaining steps.
+ */
+export async function resumeRun(
+  runId: string,
+  opts: { quiet?: boolean; approvedContent?: string } = {},
+): Promise<RunContext> {
+  const log = opts.quiet ? () => {} : console.log;
+  const ctx = getRun(runId);
+  if (!ctx) throw new Error(`No run with id "${runId}"`);
+  if (ctx.status !== "paused") {
+    throw new Error(`Run is "${ctx.status}", not "paused" — cannot resume`);
+  }
+  if (!ctx.current_step) {
+    throw new Error("Run is paused but has no current_step — inconsistent state");
+  }
+
+  const pipeline = loadPipeline(ctx.pipeline_name);
+  const pausedStepIdx = pipeline.steps.findIndex((s) => s.id === ctx.current_step);
+  if (pausedStepIdx < 0) {
+    throw new Error(`Paused step "${ctx.current_step}" not found in pipeline "${ctx.pipeline_name}"`);
+  }
+
+  ctx.status = "running";
+  persistRun(ctx);
+  log(`• Resuming pipeline "${ctx.pipeline_name}" from step [${ctx.current_step}]`);
+  log();
+
+  // Re-enter the paused step with __resumed flag, then continue with the rest
+  const stepsToRun = pipeline.steps.slice(pausedStepIdx);
+  for (let i = 0; i < stepsToRun.length; i++) {
+    const stepDef = stepsToRun[i]!;
+    ctx.current_step = stepDef.id;
+
+    log(`→ [${stepDef.id}] ${stepDef.type}${stepDef.description ? ` — ${stepDef.description}` : ""}`);
+
+    const templateCtx = {
+      inputs: ctx.inputs,
+      steps: Object.fromEntries(
+        Object.entries(ctx.steps).map(([k, v]) => [k, { output: v.output }]),
+      ),
+    };
+
+    let resolvedConfig = resolveTemplate(stepDef.with ?? {}, templateCtx) as Record<string, unknown>;
+
+    // First step in the resume = the paused step — add resume flag
+    if (i === 0) {
+      resolvedConfig = {
+        ...resolvedConfig,
+        __resumed: true,
+        __approved_content: opts.approvedContent ?? "",
+      };
+    }
+
+    const executor = getStepExecutor(stepDef.type);
+    if (!executor) {
+      ctx.steps[stepDef.id] = {
+        step_id: stepDef.id,
+        step_type: stepDef.type,
+        status: "failed",
+        output: {},
+        started_at: new Date().toISOString(),
+        finished_at: new Date().toISOString(),
+        error: `Unknown step type "${stepDef.type}"`,
+      };
+      ctx.status = "failed";
+      ctx.error = `Step "${stepDef.id}" uses unknown type "${stepDef.type}"`;
+      persistRun(ctx);
+      log(`  ✗ Unknown step type "${stepDef.type}"`);
+      return ctx;
+    }
+
+    const startedAt = new Date().toISOString();
+    let result: StepResult;
+    try {
+      const execCtx: StepExecutionContext = {
+        run_id: ctx.run_id,
+        step_id: stepDef.id,
+        step_type: stepDef.type,
+        config: resolvedConfig,
+        inputs: ctx.inputs,
+        previous_steps: ctx.steps,
+      };
+      const stepOut = await executor(execCtx);
+      result = {
+        step_id: stepDef.id,
+        step_type: stepDef.type,
+        status: stepOut.status,
+        output: stepOut.output,
+        started_at: startedAt,
+        finished_at: new Date().toISOString(),
+        error: stepOut.error,
+      };
+    } catch (err) {
+      result = {
+        step_id: stepDef.id,
+        step_type: stepDef.type,
+        status: "failed",
+        output: {},
+        started_at: startedAt,
+        finished_at: new Date().toISOString(),
+        error: (err as Error).message,
+      };
+    }
+
+    ctx.steps[stepDef.id] = result;
+
+    if (result.status === "failed") {
+      ctx.status = "failed";
+      ctx.error = result.error ?? `Step "${stepDef.id}" failed`;
+      persistRun(ctx);
+      log(`  ✗ Failed: ${result.error}`);
+      return ctx;
+    }
+
+    if (result.status === "paused") {
+      ctx.status = "paused";
+      persistRun(ctx);
+      log(`  ⏸  Paused (resume with: auto-coder run resume ${ctx.run_id})`);
+      return ctx;
+    }
+
+    log(`  ✓ Completed`);
+    persistRun(ctx);
+  }
+
+  ctx.status = "completed";
+  ctx.current_step = undefined;
+  persistRun(ctx);
+  log();
+  log(`✓ Pipeline "${ctx.pipeline_name}" completed (${ctx.run_id})`);
+  return ctx;
 }
 
 function listRegisteredHint(): string {
