@@ -5,6 +5,8 @@ export interface BuildPromptInput {
   title: string;
   description: string;
   context: FeatureContext;
+  /** Optional pre-approved plan markdown — injected into the implementation prompt */
+  plan?: string;
 }
 
 /**
@@ -23,8 +25,20 @@ export interface BuildPromptInput {
  * spawns it with workingDir = repo path).
  */
 export function buildImplementationPrompt(input: BuildPromptInput): string {
-  const { featureId, title, description, context } = input;
+  const { featureId, title, description, context, plan } = input;
   const resultFile = `.agent/results/result-${featureId}.json`;
+
+  const planSection = plan
+    ? `
+
+---
+
+## APPROVED IMPLEMENTATION PLAN
+
+The following plan has been reviewed and approved. Implement it faithfully. If you genuinely need to deviate from the plan (e.g. the plan is incorrect about an existing file), do so and note the deviation in the result's \`notes\` field.
+
+${plan}`
+    : "";
 
   return `You are an expert software engineer implementing a feature in an existing codebase.
 
@@ -40,7 +54,7 @@ ${description}
 
 ---
 
-${context.markdown}
+${context.markdown}${planSection}
 
 ---
 
@@ -78,6 +92,74 @@ ${context.markdown}
 - Do not install new dependencies unless absolutely necessary
 - Do not touch files outside the repository
 - If you can't complete the feature for any reason, write the result file with \`status: "failed"\` and a clear \`notes\` field explaining why
+
+Begin.`;
+}
+
+/**
+ * Planning prompt — asks Claude to write a markdown plan file only,
+ * no implementation code. Used by the plan-first feature flow.
+ *
+ * The plan file is later injected into `buildImplementationPrompt`
+ * via the `plan` field so the implementer has a pre-approved
+ * blueprint to follow.
+ */
+export function buildPlanningPrompt(input: BuildPromptInput): string {
+  const { featureId, title, description, context } = input;
+  const planFile = `.agent/plans/plan-${featureId}.md`;
+  const resultFile = `.agent/results/result-${featureId}.json`;
+
+  return `You are an expert software engineer **planning** a feature implementation.
+
+You are in PLANNING mode. **Do NOT write any implementation code.** Your only job is to investigate the codebase and write a plan that a separate implementation step will follow.
+
+## FEATURE
+
+**ID**: ${featureId}
+**Title**: ${title}
+
+**Description**:
+${description}
+
+---
+
+${context.markdown}
+
+---
+
+## YOUR TASK
+
+1. **Investigate the codebase** by reading the files that matter for this feature. Use the context above as a starting map; open any additional files you need.
+
+2. **Write a plan** to \`${planFile}\` in the repo. Create the \`.agent/plans/\` directory if it doesn't exist. The plan must be a markdown file with these sections:
+
+   - **Approach** — 2-3 paragraphs explaining the strategy. Mention specific files you'll touch and existing patterns you'll follow.
+   - **Files to modify** — bulleted list of existing files with a 1-line reason for each
+   - **Files to create** — bulleted list of new files with a 1-line purpose for each
+   - **Tests** — what tests will you add? Or "none" if the repo has no test setup.
+   - **Risks** — what might break, what requires extra attention, what edge cases you noticed
+   - **Out of scope** — what you explicitly will NOT do (to prevent scope creep)
+
+3. **Write a result file** to \`${resultFile}\` in the repo. The file must be a JSON object with this shape:
+
+\`\`\`json
+{
+  "status": "completed" | "failed",
+  "plan_file": "${planFile}",
+  "summary": "one-sentence summary of the planned approach",
+  "notes": "anything else worth knowing — or the error message if status is 'failed'"
+}
+\`\`\`
+
+4. **Do not apologize, explain, or summarize** in your final response text. Just write the plan file and the result file, then stop.
+
+## CONSTRAINTS
+
+- **Do NOT write any code files**. Only the plan markdown and the result JSON.
+- **Do NOT create a git branch or commit anything.**
+- **Do NOT run the code or execute tests.**
+- **Do NOT install dependencies.**
+- If you can't plan this feature (e.g. the feature description is too unclear), write the result file with \`status: "failed"\` and explain in \`notes\`.
 
 Begin.`;
 }

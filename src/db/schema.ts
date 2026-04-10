@@ -45,25 +45,27 @@ CREATE TABLE IF NOT EXISTS sync_state (
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Feature lifecycle table (added in schema v2).
--- States: pending → implementing → ready_for_review → approved | failed
+-- Feature lifecycle table (added in schema v2, extended in v4).
+-- States: pending → planning → plan_ready → implementing → ready_for_review → approved | failed
+-- The plan phase (v4) is optional: "feature create --no-plan" skips it.
 CREATE TABLE IF NOT EXISTS features (
-  id              TEXT PRIMARY KEY,
-  repo            TEXT NOT NULL,
-  title           TEXT NOT NULL,
-  description     TEXT NOT NULL,
-  status          TEXT NOT NULL DEFAULT 'pending',
-  branch_name     TEXT,
-  files_modified  TEXT,           -- JSON array of relative paths
-  files_created   TEXT,           -- JSON array of relative paths
-  pr_url          TEXT,
-  pr_number       INTEGER,
-  impact_report   TEXT,
-  test_results    TEXT,
-  error_message   TEXT,
-  tokens_used     TEXT,           -- JSON: { input, output }
-  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+  id                    TEXT PRIMARY KEY,
+  repo                  TEXT NOT NULL,
+  title                 TEXT NOT NULL,
+  description           TEXT NOT NULL,
+  status                TEXT NOT NULL DEFAULT 'pending',
+  implementation_plan   TEXT,            -- markdown Claude wrote during the plan phase
+  branch_name           TEXT,
+  files_modified        TEXT,           -- JSON array of relative paths
+  files_created         TEXT,           -- JSON array of relative paths
+  pr_url                TEXT,
+  pr_number             INTEGER,
+  impact_report         TEXT,
+  test_results          TEXT,
+  error_message         TEXT,
+  tokens_used           TEXT,           -- JSON: { input, output }
+  created_at            TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at            TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_features_repo   ON features(repo);
@@ -89,4 +91,4 @@ CREATE INDEX IF NOT EXISTS idx_runs_pipeline ON workflow_runs(pipeline_name);
 CREATE INDEX IF NOT EXISTS idx_runs_status   ON workflow_runs(status);
 `;
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;

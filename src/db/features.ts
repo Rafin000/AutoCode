@@ -3,6 +3,8 @@ import { getDb } from "./client.js";
 
 export type FeatureStatus =
   | "pending"
+  | "planning"
+  | "plan_ready"
   | "implementing"
   | "ready_for_review"
   | "approved"
@@ -14,6 +16,7 @@ export interface FeatureRow {
   title: string;
   description: string;
   status: FeatureStatus;
+  implementation_plan: string | null;
   branch_name: string | null;
   files_modified: string[] | null;
   files_created: string[] | null;
@@ -33,6 +36,7 @@ interface RawFeatureRow {
   title: string;
   description: string;
   status: FeatureStatus;
+  implementation_plan: string | null;
   branch_name: string | null;
   files_modified: string | null;
   files_created: string | null;
@@ -97,6 +101,7 @@ export function listFeatures(repo?: string): FeatureRow[] {
 
 export interface FeatureUpdate {
   status?: FeatureStatus;
+  implementation_plan?: string | null;
   branch_name?: string | null;
   files_modified?: string[] | null;
   files_created?: string[] | null;
@@ -123,6 +128,7 @@ export function updateFeature(id: string, fields: FeatureUpdate): void {
   };
 
   if (fields.status !== undefined) set("status", fields.status);
+  if (fields.implementation_plan !== undefined) set("implementation_plan", fields.implementation_plan);
   if (fields.branch_name !== undefined) set("branch_name", fields.branch_name);
   if (fields.files_modified !== undefined)
     set("files_modified", fields.files_modified ? JSON.stringify(fields.files_modified) : null);

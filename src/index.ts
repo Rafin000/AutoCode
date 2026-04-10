@@ -22,6 +22,8 @@ import { askCommand } from "./commands/ask.js";
 import { interviewCommand } from "./commands/interview.js";
 import {
   featureCreateCommand,
+  featureImplementCommand,
+  featurePlanCommand,
   featureListCommand,
   featureStatusCommand,
   featureApproveCommand,
@@ -168,12 +170,25 @@ const feature = program
 
 feature
   .command("create")
-  .description("Spawn Claude CLI to implement a new feature on a branch + open a PR")
+  .description("Plan a new feature (default) or implement it directly with --no-plan")
   .requiredOption("-t, --title <title>", "Feature title (short)")
   .requiredOption("-d, --description <desc>", "Feature description (full)")
   .option("-r, --repo <name>", "Target repo (default: first registered repo)")
   .option("--no-pr", "Skip PR creation (just commit and push the branch)")
+  .option("--no-plan", "Skip the plan phase and implement directly")
   .action(featureCreateCommand);
+
+feature
+  .command("implement <id>")
+  .description("Run implementation for a plan_ready feature")
+  .option("-r, --repo <name>", "Target repo (default: the feature's repo)")
+  .option("--no-pr", "Skip PR creation")
+  .action(featureImplementCommand);
+
+feature
+  .command("plan <id>")
+  .description("View the saved plan for a feature")
+  .action(featurePlanCommand);
 
 feature
   .command("list")
