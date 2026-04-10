@@ -722,7 +722,11 @@ export async function featureStatusCommand(id: string): Promise<void> {
 
 /* ───── feature approve ──────────────────────────────────────── */
 
-export async function featureApproveCommand(id: string): Promise<void> {
+export async function featureApproveCommand(
+  id: string,
+  opts: { repo?: string },
+): Promise<void> {
+  const config = loadConfig();
   const feature = getFeature(id);
   if (!feature) {
     console.error(`No feature with id "${id}"`);
@@ -732,8 +736,17 @@ export async function featureApproveCommand(id: string): Promise<void> {
     console.error(`Feature is in state "${feature.status}", not "ready_for_review"`);
     process.exit(1);
   }
-  updateFeature(id, { status: "approved" });
+
+  updateFeature(id, { status: "approved" as FeatureStatus });
   console.log(`✓ Feature ${id} approved`);
-  console.log("  (Knowledge-base sync will happen on the next `auto-coder sync` run,");
-  console.log("   or automatically via the post-commit hook if installed.)");
+
+  // Run knowledge sync from the diff
+  const repo = resolveRepo(config, opts.repo ?? feature.repo);
+  try {
+    const { syncFeatureApproval } = await import("../sync/feature-sync.js");
+    await syncFeatureApproval(config, repo, feature);
+  } catch (err) {
+    console.warn(`  ⚠ Knowledge sync failed: ${(err as Error).message}`);
+    console.warn("  (The feature is still approved — run `auto-coder sync` manually to recover.)");
+  }
 }

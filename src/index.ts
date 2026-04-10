@@ -281,7 +281,8 @@ feature
 
 feature
   .command("approve <id>")
-  .description("Mark a merged feature as approved")
+  .description("Mark a merged feature as approved + sync knowledge from the diff")
+  .option("-r, --repo <name>", "Target repo")
   .action(featureApproveCommand);
 
 // ─── Ask / Interview ────────────────────────────────────────────────────────
