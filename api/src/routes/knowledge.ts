@@ -4,6 +4,23 @@ import type { Env } from "../types.js";
 export const knowledgeRoutes = new Hono<{ Bindings: Env }>();
 
 /**
+ * GET /api/knowledge/stats
+ */
+knowledgeRoutes.get("/stats", async (c) => {
+  const features = await c.env.DB.prepare("SELECT COUNT(*) as n FROM features").first<{ n: number }>();
+  const rules = await c.env.DB.prepare("SELECT COUNT(*) as n FROM rules").first<{ n: number }>();
+  const vectors = await c.env.DB.prepare("SELECT COUNT(*) as n FROM vector_content").first<{ n: number }>();
+
+  return c.json({
+    schema_version: 5,
+    document_count: vectors?.n ?? 0,
+    repo_count: 0,
+    feature_count: features?.n ?? 0,
+    rule_count: rules?.n ?? 0,
+  });
+});
+
+/**
  * POST /api/knowledge/vectors/upsert
  *
  * Accepts vectors + content from the CLI's sync pipeline.
