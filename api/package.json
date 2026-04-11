@@ -1,0 +1,19 @@
+{
+  "name": "auto-coder-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --remote",
+    "dev:local": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 migrations apply auto-coder-db",
+    "db:migrate:local": "wrangler d1 migrations apply auto-coder-db --local"
+  },
+  "dependencies": {
+    "hono": "^4.12.12"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240815.0",
+    "wrangler": "^4.0.0"
+  }
+}
