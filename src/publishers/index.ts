@@ -1,9 +1,11 @@
 import { Publisher } from "./types.js";
 import { BlueskyPublisher } from "./bluesky.js";
+import { BufferPublisher } from "./buffer.js";
 import { MockPublisher } from "./mock.js";
 
 const publishers: Record<string, () => Publisher> = {
   bluesky: () => new BlueskyPublisher(),
+  buffer: () => new BufferPublisher(),
   mock: () => new MockPublisher(),
 };
 

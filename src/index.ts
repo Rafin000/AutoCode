@@ -170,6 +170,16 @@ rules.command("disable <id>").description("Disable a rule").action(rulesDisableC
 rules.command("enable <id>").description("Enable a rule").action(rulesEnableCommand);
 rules.command("delete <id>").description("Delete a rule").action(rulesDeleteCommand);
 
+// ─── Cron ───────────────────────────────────────────────────────────────────
+program
+  .command("cron")
+  .description("Run all pipelines with trigger: cron (use from system crontab)")
+  .option("--quiet", "Suppress output")
+  .action(async (opts: { quiet?: boolean }) => {
+    const { runCronPipelines } = await import("./workflow/cron.js");
+    await runCronPipelines(opts);
+  });
+
 // ─── HTTP API server ────────────────────────────────────────────────────────
 program
   .command("serve")

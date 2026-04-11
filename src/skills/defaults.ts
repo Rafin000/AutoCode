@@ -15,6 +15,7 @@ export function seedDefaults(): void {
   seedFile(path.join(PIPELINES_DIR, "interview.yaml"), INTERVIEW_PIPELINE);
   seedFile(path.join(PIPELINES_DIR, "marketing-mock.yaml"), MARKETING_MOCK_PIPELINE);
   seedFile(path.join(PIPELINES_DIR, "marketing-bluesky.yaml"), MARKETING_BLUESKY_PIPELINE);
+  seedFile(path.join(PIPELINES_DIR, "marketing-buffer.yaml"), MARKETING_BUFFER_PIPELINE);
 }
 
 function seedFile(filePath: string, content: string): void {
@@ -272,5 +273,64 @@ steps:
     description: Post to Bluesky
     with:
       channel: bluesky
+      content: "{{ steps.draft.output.text }}"
+`;
+
+const MARKETING_BUFFER_PIPELINE = `name: marketing-buffer
+description: Draft a post, review, publish to all channels via Buffer
+trigger: cron
+inputs:
+  topic:
+    type: string
+    required: true
+    default: "recent work update"
+  repo:
+    type: string
+    required: false
+
+steps:
+  - id: context
+    type: retrieve_context
+    description: Find relevant content
+    with:
+      query: "{{ inputs.topic }}"
+      repo: "{{ inputs.repo }}"
+      top_k: 12
+
+  - id: draft
+    type: llm_generate
+    description: Draft post variants
+    with:
+      skill: content-marketer
+      user_prompt: |
+        {{ steps.context.output.markdown }}
+
+        ---
+
+        ## Topic
+        {{ inputs.topic }}
+
+        Write 3 post variants (short, medium, long) grounded in the context above.
+
+  - id: save
+    type: save_draft
+    description: Save for review
+    with:
+      content: "{{ steps.draft.output.text }}"
+      kind: buffer_post
+      topic: "{{ inputs.topic }}"
+
+  - id: review
+    type: human_review
+    description: Review before publishing to all channels
+    with:
+      prompt: "Review your post. Resume to publish via Buffer to all connected channels."
+      draft_id: "{{ steps.save.output.draft_id }}"
+
+  - id: post
+    type: publish
+    description: Publish to all channels via Buffer
+    with:
+      channel: buffer
       content: "{{ steps.draft.output.text }}"
 `;

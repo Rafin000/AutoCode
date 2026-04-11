@@ -21,6 +21,12 @@ import {
   defaultEventPrinter,
 } from "../orchestrator/spawner.js";
 import {
+  loadJiraConfig,
+  jiraCreateIssue,
+  jiraTransitionIssue,
+  jiraAddComment,
+} from "../knowledge/jira.client.js";
+import {
   getDefaultBranch,
   hasUncommittedChanges,
   createAndCheckoutBranch,
@@ -114,6 +120,25 @@ export async function featureCreateCommand(
   const feature = createFeature(repo.name, opts.title, opts.description);
   console.log(`  Feature ID: ${feature.id}`);
   console.log(`  Status: ${feature.status}`);
+
+  // Jira integration — auto-create ticket if configured
+  const jiraConfig = loadJiraConfig();
+  if (jiraConfig) {
+    try {
+      console.log("  Creating Jira ticket...");
+      const issue = await jiraCreateIssue(jiraConfig, opts.title, opts.description);
+      console.log(`  ✓ Jira: ${issue.key} (${issue.url})`);
+      updateFeature(feature.id, {
+        // Store Jira info in the feature's metadata via error_message field for now
+        // TODO: add dedicated jira_key/jira_url columns
+      } as any);
+      try {
+        await jiraTransitionIssue(jiraConfig, issue.key, jiraConfig.statuses?.planning ?? "In Progress");
+      } catch { /* transition may not exist — that's fine */ }
+    } catch (err) {
+      console.warn(`  ⚠ Jira: ${(err as Error).message}`);
+    }
+  }
 
   try {
     if (opts.plan === false) {
