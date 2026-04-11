@@ -8,7 +8,7 @@ compatibility_date = "2024-09-23"
 [[d1_databases]]
 binding = "DB"
 database_name = "auto-coder-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "6ae4dff1-84ee-4cef-af91-a15ac70a4b52"
 migrations_dir = "src/db/migrations"
 
 # ─── Vectorize ───────────────────────────────────────────────────────────────
