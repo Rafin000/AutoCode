@@ -184,7 +184,9 @@ program
 // ─── Cross-service linking ───────────────────────────────────────────────────
 program
   .command("link <svc1> <svc2>")
-  .description("Analyze two repos for cross-service dependencies")
+  .description("Analyze two repos for cross-service dependencies using Claude")
+  .option("--skip-scan", "Reuse existing .agent-link.json instead of re-analyzing")
+  .option("--timeout <ms>", "Claude CLI timeout in ms (0 = no limit)", "0")
   .action(linkCommand);
 
 // ─── Watch ──────────────────────────────────────────────────────────────────

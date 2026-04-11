@@ -24,10 +24,17 @@ export interface EmbedderConfig {
   dimensions: number;
 }
 
+export interface ApiConfig {
+  /** URL of the deployed Cloudflare Worker API. If set, CLI uses remote stores. */
+  url?: string;
+}
+
 export interface Config {
   version: number;
   repos: RepoConfig[];
   llm: LLMConfig;
+  /** Optional remote API. When set, features/rules/vectors go through the Worker. */
+  api?: ApiConfig;
   knowledge: {
     graph: GraphConfig;
     vectors: VectorConfig;
