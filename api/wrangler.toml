@@ -1,21 +1,21 @@
-name = "autocode-api"
+name = "auto-coder-api"
 main = "src/index.ts"
 compatibility_date = "2024-09-23"
 
 # ─── D1 Database ─────────────────────────────────────────────────────────────
-# Create with: wrangler d1 create autocode-db
+# Create with: wrangler d1 create auto-coder-db
 # Then paste the database_id below.
 [[d1_databases]]
 binding = "DB"
-database_name = "autocode-db"
+database_name = "auto-coder-db"
 database_id = "6ae4dff1-84ee-4cef-af91-a15ac70a4b52"
 migrations_dir = "src/db/migrations"
 
 # ─── Vectorize ───────────────────────────────────────────────────────────────
-# Create with: wrangler vectorize create autocode-vectors --dimensions=768 --metric=cosine
+# Create with: wrangler vectorize create auto-coder-vectors --dimensions=768 --metric=cosine
 [[vectorize]]
 binding = "VECTORIZE"
-index_name = "autocode-vectors"
+index_name = "auto-coder-vectors"
 
 # ─── Workers AI (for embeddings) ─────────────────────────────────────────────
 [ai]
