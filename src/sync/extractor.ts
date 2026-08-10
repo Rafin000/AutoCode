@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { FileCategory, WalkedFile } from "./walker.js";
+import { WalkedFile } from "./walker.js";
 
 const MAX_CONTENT_CHARS = 2000;
 

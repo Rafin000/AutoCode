@@ -7,7 +7,7 @@ export interface InterviewOptions {
 }
 
 /**
- * `auto-coder interview` is now a thin wrapper around the `interview` pipeline.
+ * `autocode interview` is now a thin wrapper around the `interview` pipeline.
  */
 export async function interviewCommand(
   question: string,
@@ -19,7 +19,7 @@ export async function interviewCommand(
   try {
     pipeline = loadPipeline("interview");
   } catch {
-    console.error("interview pipeline not found. Run `auto-coder init` to seed defaults.");
+    console.error("interview pipeline not found. Run `autocode init` to seed defaults.");
     process.exit(1);
   }
 

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Config, RepoConfig } from "../config/types.js";
-import { FeatureRow, updateFeature } from "../db/features.js";
+import { FeatureRow } from "../db/features.js";
 import { GraphClient } from "../knowledge/graph.js";
 import { VectorClient, VectorPoint } from "../knowledge/vectors.js";
 import {
@@ -41,7 +41,7 @@ export async function syncFeatureApproval(
   const lastCommit = repoState?.last_synced_commit;
 
   if (!lastCommit) {
-    console.log("  (no previous sync — run `auto-coder sync` for a full index)");
+    console.log("  (no previous sync — run `autocode sync` for a full index)");
     return;
   }
 

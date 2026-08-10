@@ -1,5 +1,5 @@
 /**
- * SQLite schema for auto-coder.
+ * SQLite schema for autocode.
  *
  * Three tables:
  *

@@ -53,7 +53,7 @@ export async function rulesListCommand(opts: {
 
   if (rules.length === 0) {
     console.log("No rules defined.");
-    console.log('Add one: auto-coder rules add --type hard_rule --rule "..." --scope all');
+    console.log('Add one: autocode rules add --type hard_rule --rule "..." --scope all');
     return;
   }
 

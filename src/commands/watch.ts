@@ -18,7 +18,7 @@ export interface WatchOptions {
  * against `last_synced_commit` in SQLite.
  *
  * Designed to run in a terminal tab and be left alone:
- *   auto-coder watch --interval 30
+ *   autocode watch --interval 30
  *
  * The git post-commit hook (P1.7) is instant but only fires on
  * local commits. Watch catches pulls, merges, rebases, and
@@ -41,7 +41,7 @@ export async function watchCommand(opts: WatchOptions): Promise<void> {
     console.error(
       opts.repo
         ? `No repo named "${opts.repo}" is registered.`
-        : "Run `auto-coder repo add <name> <path>` first.",
+        : "Run `autocode repo add <name> <path>` first.",
     );
     process.exit(1);
   }

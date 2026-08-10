@@ -1,11 +1,11 @@
 {
-  "name": "auto-coder",
+  "name": "autocode",
   "version": "0.1.0",
   "description": "A personal AI that knows your code, answers interview questions, and grows with you.",
   "type": "module",
   "private": true,
   "bin": {
-    "auto-coder": "./bin/auto-coder"
+    "autocode": "./bin/autocode"
   },
   "scripts": {
     "build": "tsup",

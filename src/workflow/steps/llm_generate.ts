@@ -10,7 +10,7 @@ import { callLLM } from "../../agent/llm.js";
  * and a user prompt assembled from previous step outputs.
  *
  * Config:
- *   skill:        string  — name of a skill in ~/.auto-coder/skills/ (required)
+ *   skill:        string  — name of a skill in ~/.autocode/skills/ (required)
  *   user_prompt:  string  — the user message to send (required, supports templates)
  *   max_tokens:   number  — override skill's default (optional)
  *   temperature:  number  — override skill's default (optional)

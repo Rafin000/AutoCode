@@ -7,7 +7,7 @@ import { StepExecutionContext, StepExecutionResult } from "../types.js";
  * Pauses the pipeline and returns status "paused". The engine writes
  * the run state to SQLite and exits. The user reviews the content
  * (typically the output of a previous llm_generate or save_draft step),
- * then resumes with `auto-coder run resume <run-id>`.
+ * then resumes with `autocode run resume <run-id>`.
  *
  * On resume, this step completes immediately with the approved content
  * passed through. (The resume logic in engine.ts will skip already-
@@ -38,9 +38,9 @@ registerStep("human_review", async (ctx: StepExecutionContext): Promise<StepExec
   console.log(`  ⏸  ${prompt}`);
   if (draftId) {
     console.log(`     Draft ID: ${draftId}`);
-    console.log(`     View: auto-coder draft show ${draftId}`);
+    console.log(`     View: autocode draft show ${draftId}`);
   }
-  console.log(`     Resume: auto-coder run resume <run-id>`);
+  console.log(`     Resume: autocode run resume <run-id>`);
 
   return {
     status: "paused",

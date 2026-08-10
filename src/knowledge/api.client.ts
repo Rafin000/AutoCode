@@ -1,5 +1,5 @@
 /**
- * HTTP client for talking to the auto-coder Cloudflare Worker API.
+ * HTTP client for talking to the autocode Cloudflare Worker API.
  *
  * When `api.url` is set in config, the CLI uses this client instead
  * of local SQLite/Qdrant for features, rules, and vector operations.

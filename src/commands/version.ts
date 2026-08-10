@@ -12,7 +12,7 @@ export function getPackageVersion(): string {
           name?: string;
           version?: string;
         };
-        if (pkg.name === "auto-coder" && typeof pkg.version === "string") {
+        if (pkg.name === "autocode" && typeof pkg.version === "string") {
           return pkg.version;
         }
       } catch {
@@ -21,7 +21,7 @@ export function getPackageVersion(): string {
     }
     const parent = path.dirname(dir);
     if (parent === dir) {
-      throw new Error("Could not locate auto-coder package.json");
+      throw new Error("Could not locate autocode package.json");
     }
     dir = parent;
   }

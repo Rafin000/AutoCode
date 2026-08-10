@@ -1,18 +1,18 @@
 services:
   neo4j:
     image: neo4j:5-community
-    container_name: auto-coder-neo4j
+    container_name: autocode-neo4j
     ports:
       - "7474:7474"   # HTTP / Browser UI
       - "7687:7687"   # Bolt protocol
     environment:
-      NEO4J_AUTH: neo4j/auto-coder
+      NEO4J_AUTH: neo4j/autocode
     volumes:
       - neo4j_data:/data
 
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: auto-coder-qdrant
+    container_name: autocode-qdrant
     ports:
       - "6333:6333"   # REST API + dashboard
       - "6334:6334"   # gRPC

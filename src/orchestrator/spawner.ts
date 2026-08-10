@@ -58,7 +58,7 @@ export async function spawnClaudeCli(opts: SpawnOptions): Promise<SpawnResult> {
   // Claude CLI non-interactively. Without it, any Write/Edit/Bash tool
   // that would normally prompt for permission gets silently blocked —
   // the events stream through but nothing hits disk. The user opted in
-  // to this by running `auto-coder feature create`, which is an
+  // to this by running `autocode feature create`, which is an
   // explicit request to let Claude modify their repo.
   const child: ChildProcess = spawn(
     "claude",

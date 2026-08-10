@@ -6,7 +6,7 @@
  * produces 384-dim vectors and is small (~90MB) and fast.
  *
  * The transformers library is HEAVY (pulls in onnxruntime and friends),
- * so we dynamic-import it on first use. This keeps `auto-coder --help`
+ * so we dynamic-import it on first use. This keeps `autocode --help`
  * fast — no model loading until someone actually needs an embedding.
  */
 

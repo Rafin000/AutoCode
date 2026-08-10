@@ -52,19 +52,19 @@ import {
 const program = new Command();
 
 program
-  .name("auto-coder")
+  .name("autocode")
   .description("Personal AI that knows your code and answers questions grounded in your real work.")
   .version(getPackageVersion());
 
 program
   .command("version")
-  .description("Print the auto-coder version and exit")
+  .description("Print the autocode version and exit")
   .action(versionCommand);
 
 // ─── Setup ──────────────────────────────────────────────────────────────────
 program
   .command("init")
-  .description("Create ~/.auto-coder/ directory and default config")
+  .description("Create ~/.autocode/ directory and default config")
   .action(initCommand);
 
 program
@@ -210,7 +210,7 @@ program
 // ─── Workflow engine (pipelines + runs) ─────────────────────────────────────
 const run = program
   .command("run")
-  .description("Run user-defined pipelines from ~/.auto-coder/pipelines/");
+  .description("Run user-defined pipelines from ~/.autocode/pipelines/");
 
 run
   .arguments("[pipeline]")
@@ -222,9 +222,9 @@ run
   )
   .action(async (pipeline: string | undefined, opts: { input: string[] }) => {
     if (!pipeline) {
-      console.error("Usage: auto-coder run <pipeline> [-i key=value ...]");
-      console.error("       auto-coder run list       — show past runs");
-      console.error("       auto-coder run pipelines  — show available pipelines");
+      console.error("Usage: autocode run <pipeline> [-i key=value ...]");
+      console.error("       autocode run list       — show past runs");
+      console.error("       autocode run pipelines  — show available pipelines");
       process.exit(1);
     }
     await runExecuteCommand(pipeline, opts);
@@ -254,7 +254,7 @@ run
 
 run
   .command("pipelines")
-  .description("List every pipeline defined in ~/.auto-coder/pipelines/")
+  .description("List every pipeline defined in ~/.autocode/pipelines/")
   .action(runPipelinesCommand);
 
 // ─── Feature lifecycle ──────────────────────────────────────────────────────

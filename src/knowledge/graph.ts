@@ -14,7 +14,7 @@ import {
  * - Single driver, managed sessions. Call close() when the process exits.
  * - Every node/edge goes through assertValidLabel/assertValidEdge before
  *   any Cypher is run, so untrusted input can't inject new labels.
- * - Every auto-coder node carries a `repo` property so we can query per
+ * - Every autocode node carries a `repo` property so we can query per
  *   registered repo and delete cleanly on `repo remove`.
  */
 export class GraphClient {

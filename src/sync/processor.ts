@@ -1,4 +1,3 @@
-import path from "node:path";
 import { RepoConfig, Config } from "../config/types.js";
 import { GraphClient } from "../knowledge/graph.js";
 import { VectorClient, VectorPoint } from "../knowledge/vectors.js";
@@ -15,7 +14,6 @@ import {
   walkRepo,
   getHeadCommit,
   getChangedFiles,
-  classifyFile,
   WalkedFile,
 } from "./walker.js";
 import { extractFromFile, ExtractedDocument } from "./extractor.js";

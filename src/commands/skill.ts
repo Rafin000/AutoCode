@@ -1,11 +1,10 @@
 import { listSkills, loadSkill, skillPath, ensureWorkflowDirs } from "../workflow/loader.js";
-import fs from "node:fs";
 
 export async function skillListCommand(): Promise<void> {
   const skills = listSkills();
   if (skills.length === 0) {
     console.log("No skills defined.");
-    console.log("Drop YAML files into ~/.auto-coder/skills/ to get started.");
+    console.log("Drop YAML files into ~/.autocode/skills/ to get started.");
     return;
   }
   const nameWidth = Math.max(...skills.map((s) => s.name.length), 10) + 2;

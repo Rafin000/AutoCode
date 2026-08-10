@@ -29,7 +29,7 @@ export function loadPipeline(name: string): PipelineDefinition {
   if (!fs.existsSync(file)) {
     throw new Error(
       `Pipeline "${name}" not found at ${file}. ` +
-        `Run \`auto-coder pipeline list\` to see what's available.`,
+        `Run \`autocode pipeline list\` to see what's available.`,
     );
   }
   const raw = fs.readFileSync(file, "utf-8");

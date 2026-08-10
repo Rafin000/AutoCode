@@ -7,7 +7,7 @@ export interface AskOptions {
 }
 
 /**
- * `auto-coder ask` is now a thin wrapper around the `qa` pipeline.
+ * `autocode ask` is now a thin wrapper around the `qa` pipeline.
  * This maintains backward compatibility while routing everything
  * through the workflow engine.
  */
@@ -21,7 +21,7 @@ export async function askCommand(
   try {
     pipeline = loadPipeline("qa");
   } catch {
-    console.error("qa pipeline not found. Run `auto-coder init` to seed default pipelines.");
+    console.error("qa pipeline not found. Run `autocode init` to seed default pipelines.");
     process.exit(1);
   }
 

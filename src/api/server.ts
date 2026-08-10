@@ -13,7 +13,7 @@ export function createApp(): Hono {
 
   app.get("/", (c) =>
     c.json({
-      name: "auto-coder",
+      name: "autocode",
       version: "0.1.0",
       endpoints: [
         "/api/features",
@@ -36,7 +36,7 @@ export function startServer(port: number): void {
   const app = createApp();
 
   serve({ fetch: app.fetch, port }, (info) => {
-    console.log(`auto-coder API running on http://localhost:${info.port}`);
+    console.log(`autocode API running on http://localhost:${info.port}`);
     console.log();
     console.log("Endpoints:");
     console.log("  GET    /");

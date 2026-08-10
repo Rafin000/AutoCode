@@ -55,7 +55,7 @@ export async function linkCommand(
     console.log(`  ${svc2}: ${nodes2.length} nodes`);
 
     if (nodes1.length === 0 || nodes2.length === 0) {
-      console.error("  ✗ One or both repos have no indexed nodes. Run `auto-coder sync` first.");
+      console.error("  ✗ One or both repos have no indexed nodes. Run `autocode sync` first.");
       process.exit(1);
     }
 

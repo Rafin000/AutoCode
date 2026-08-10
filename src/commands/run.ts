@@ -62,7 +62,7 @@ export async function runExecuteCommand(
 export async function runListCommand(opts: { pipeline?: string }): Promise<void> {
   const runs = listRuns(opts.pipeline);
   if (runs.length === 0) {
-    console.log("No runs yet. Trigger one with: auto-coder run <pipeline-name>");
+    console.log("No runs yet. Trigger one with: autocode run <pipeline-name>");
     return;
   }
 
@@ -172,7 +172,7 @@ export async function runPipelinesCommand(): Promise<void> {
   const pipelines = listPipelines();
   if (pipelines.length === 0) {
     console.log("No pipelines defined.");
-    console.log(`Drop YAML files into ~/.auto-coder/pipelines/ to get started.`);
+    console.log(`Drop YAML files into ~/.autocode/pipelines/ to get started.`);
     return;
   }
   console.log(`${pipelines.length} pipeline(s) defined:\n`);

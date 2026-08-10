@@ -53,11 +53,11 @@ export const DEFAULT_CONFIG: Config = {
     graph: {
       url: "bolt://localhost:7687",
       username: "neo4j",
-      password: "repo-agent",
+      password: "autocode",
     },
     vectors: {
       url: "http://localhost:6333",
-      collection: "auto-coder",
+      collection: "autocode",
     },
   },
   embedder: {

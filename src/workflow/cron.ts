@@ -1,4 +1,4 @@
-import { loadPipeline, listPipelines } from "./loader.js";
+import { listPipelines } from "./loader.js";
 import { runPipeline } from "./engine.js";
 
 /**
@@ -13,7 +13,7 @@ import { runPipeline } from "./engine.js";
  * that has trigger: cron. The user invokes this from their system
  * crontab at the desired interval:
  *
- *   0 9 * * MON /path/to/auto-coder cron
+ *   0 9 * * MON /path/to/autocode cron
  *
  * This keeps it simple — no daemon, no cron parser dependency.
  */

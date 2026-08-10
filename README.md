@@ -49,40 +49,40 @@ docker compose up -d
 npm install
 npm run build
 
-# 3. Link globally (so `auto-coder` works from anywhere)
+# 3. Link globally (so `autocode` works from anywhere)
 npm link
 
 # 4. Initialize config
-auto-coder init
+autocode init
 
 # 5. Register your first repo
-auto-coder repo add my-project /path/to/my-project
+autocode repo add my-project /path/to/my-project
 
 # 6. Install auto-sync
-auto-coder hook install my-project
+autocode hook install my-project
 
 # 7. Index it
-auto-coder sync my-project
+autocode sync my-project
 
 # 8. Ask it something
-auto-coder ask "what projects have I used Neo4j in?"
+autocode ask "what projects have I used Neo4j in?"
 ```
 
 ## Commands (v1)
 
 | Command | Purpose |
 |---------|---------|
-| `auto-coder init` | Create `~/.auto-coder/` and default config |
-| `auto-coder config` | Show current config |
-| `auto-coder repo add <name> <path>` | Register a repo |
-| `auto-coder repo list` | List registered repos |
-| `auto-coder repo remove <name>` | Unregister a repo |
-| `auto-coder sync <name>` | Index or re-sync a single repo |
-| `auto-coder sync --all` | Sync every registered repo |
-| `auto-coder hook install <name>` | Install post-commit auto-sync |
-| `auto-coder hook uninstall <name>` | Remove post-commit hook |
-| `auto-coder ask "<question>"` | Ask a question about your work |
-| `auto-coder interview "<question>"` | Answer in interview format |
+| `autocode init` | Create `~/.autocode/` and default config |
+| `autocode config` | Show current config |
+| `autocode repo add <name> <path>` | Register a repo |
+| `autocode repo list` | List registered repos |
+| `autocode repo remove <name>` | Unregister a repo |
+| `autocode sync <name>` | Index or re-sync a single repo |
+| `autocode sync --all` | Sync every registered repo |
+| `autocode hook install <name>` | Install post-commit auto-sync |
+| `autocode hook uninstall <name>` | Remove post-commit hook |
+| `autocode ask "<question>"` | Ask a question about your work |
+| `autocode interview "<question>"` | Answer in interview format |
 
 ## Architecture
 
@@ -123,38 +123,38 @@ npm run dev -- --help
 
 # Build once, then run
 npm run build
-./bin/auto-coder --help
+./bin/autocode --help
 ```
 
 ## Auto-sync
 
-auto-coder ships with two complementary sync triggers so the knowledge
+autocode ships with two complementary sync triggers so the knowledge
 base stays fresh without you remembering to run anything.
 
 ### 1. Git hook (instant, local)
 
 ```bash
-auto-coder hook install <repo-name>
+autocode hook install <repo-name>
 ```
 
 Installs a `post-commit` hook into the repo. Every commit triggers a
-background `auto-coder sync <name> --quiet` run. Usually finishes in
+background `autocode sync <name> --quiet` run. Usually finishes in
 under a second thanks to diff-based incremental sync.
 
 To see which repos have hooks installed:
 
 ```bash
-auto-coder hook list
+autocode hook list
 ```
 
 To remove:
 
 ```bash
-auto-coder hook uninstall <repo-name>
+autocode hook uninstall <repo-name>
 ```
 
 The hook is marker-guarded — uninstall only touches hooks that
-auto-coder installed, not any foreign hooks you may have.
+autocode installed, not any foreign hooks you may have.
 
 ### 2. Daily cron (catches everything the hook misses)
 
@@ -164,7 +164,7 @@ doesn't run. A daily cron catches these cases:
 
 ```cron
 # Add to `crontab -e`
-0 7 * * * /path/to/auto-coder sync --all > /tmp/auto-coder.log 2>&1
+0 7 * * * /path/to/autocode sync --all > /tmp/autocode.log 2>&1
 ```
 
 Incremental sync is cheap, so running daily has negligible cost.

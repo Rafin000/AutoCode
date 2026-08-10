@@ -21,7 +21,7 @@ export async function syncCommand(
   // --all overrides positional name
   if (opts.all) {
     if (config.repos.length === 0) {
-      console.error("No repos registered. Use `auto-coder repo add <name> <path>` first.");
+      console.error("No repos registered. Use `autocode repo add <name> <path>` first.");
       process.exit(1);
     }
     console.log(`Syncing ${config.repos.length} repo(s)...\n`);
@@ -40,14 +40,14 @@ export async function syncCommand(
   }
 
   if (!name) {
-    console.error("Usage: auto-coder sync <name>  (or --all)");
+    console.error("Usage: autocode sync <name>  (or --all)");
     process.exit(1);
   }
 
   const repo = config.repos.find((r) => r.name === name);
   if (!repo) {
     console.error(`No repo named "${name}" is registered.`);
-    console.error("Run `auto-coder repo list` to see registered repos.");
+    console.error("Run `autocode repo list` to see registered repos.");
     process.exit(1);
   }
 

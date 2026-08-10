@@ -1,7 +1,7 @@
 /**
  * Whitelisted graph schema.
  *
- * Every node label and edge type used by auto-coder must be in one of
+ * Every node label and edge type used by autocode must be in one of
  * these sets. The graph client refuses to create anything that isn't
  * whitelisted, which prevents Cypher injection via bad input and
  * keeps the schema focused.

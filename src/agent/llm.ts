@@ -1,5 +1,42 @@
 import { LLMConfig } from "../config/types.js";
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * fetch with a request timeout and a small retry on transient failures
+ * (HTTP 429 / 5xx or network errors), using exponential backoff.
+ */
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  { timeoutMs = 60000, retries = 3 } = {},
+): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(timer);
+      if ((res.status === 429 || res.status >= 500) && attempt < retries) {
+        await sleep(500 * 2 ** attempt);
+        continue;
+      }
+      return res;
+    } catch (err) {
+      clearTimeout(timer);
+      lastErr = err;
+      if (attempt < retries) {
+        await sleep(500 * 2 ** attempt);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr;
+}
+
+
 export interface LLMRequest {
   system: string;
   user: string;
@@ -57,7 +94,7 @@ async function callAnthropic(
       "ANTHROPIC_API_KEY is not set. Export it in your shell:\n" +
         '  export ANTHROPIC_API_KEY="sk-ant-..."\n' +
         "Or prefix the command:\n" +
-        '  ANTHROPIC_API_KEY="sk-ant-..." auto-coder ask "your question"',
+        '  ANTHROPIC_API_KEY="sk-ant-..." autocode ask "your question"',
     );
   }
 
@@ -69,7 +106,7 @@ async function callAnthropic(
     messages: [{ role: "user", content: req.user }],
   };
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetchWithRetry("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": apiKey,
@@ -114,7 +151,7 @@ async function callOpenAI(
       "OPENAI_API_KEY is not set. Export it in your shell:\n" +
         '  export OPENAI_API_KEY="sk-..."\n' +
         "Or prefix the command:\n" +
-        '  OPENAI_API_KEY="sk-..." auto-coder ask "your question"',
+        '  OPENAI_API_KEY="sk-..." autocode ask "your question"',
     );
   }
 
@@ -128,7 +165,7 @@ async function callOpenAI(
     ],
   };
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,

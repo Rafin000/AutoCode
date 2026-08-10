@@ -1,13 +1,13 @@
 /**
  * Core types for the workflow engine.
  *
- * Everything in auto-coder that isn't a fixed capability is built
+ * Everything in autocode that isn't a fixed capability is built
  * on these types. A pipeline is a YAML file describing a sequence of
  * steps. A skill is a YAML file describing a reusable LLM persona.
  * Runs are execution records persisted in SQLite.
  */
 
-/* ───── YAML shapes (loaded from ~/.auto-coder/) ──────────────────── */
+/* ───── YAML shapes (loaded from ~/.autocode/) ──────────────────── */
 
 export interface InputSpec {
   type: "string" | "number" | "boolean";

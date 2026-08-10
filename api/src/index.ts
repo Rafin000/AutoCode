@@ -12,7 +12,7 @@ app.use("*", cors());
 
 app.get("/", (c) =>
   c.json({
-    name: "auto-coder-api",
+    name: "autocode-api",
     version: "0.1.0",
     runtime: "cloudflare-workers",
     endpoints: [

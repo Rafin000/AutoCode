@@ -6,7 +6,7 @@ import { loadConfig } from "../config/loader.js";
  * Git hook installer.
  *
  * Writes a post-commit hook into .git/hooks that runs
- * `auto-coder sync <name> --quiet` in the background after every commit.
+ * `autocode sync <name> --quiet` in the background after every commit.
  *
  * The hook uses a marker comment so we can safely detect + remove
  * our own hook without clobbering any user-authored hooks that
@@ -18,29 +18,29 @@ const HOOK_MARKER = "# AUTO-CODER-HOOK-V1";
 function buildHookScript(repoName: string, binaryPath: string): string {
   return `#!/bin/sh
 ${HOOK_MARKER}
-# Installed by auto-coder. Syncs this repo's knowledge base after
+# Installed by autocode. Syncs this repo's knowledge base after
 # each commit. The trailing & runs sync in the background so your
 # commit isn't blocked.
 #
-# To remove this hook: auto-coder hook uninstall ${repoName}
+# To remove this hook: autocode hook uninstall ${repoName}
 
 "${binaryPath}" sync ${repoName} --quiet > /dev/null 2>&1 &
 `;
 }
 
 /**
- * Resolve the absolute path to the auto-coder binary so the hook
+ * Resolve the absolute path to the autocode binary so the hook
  * works regardless of the user's PATH at commit time.
  */
 function resolveBinaryPath(): string {
   // process.argv[1] is typically the script path Node was invoked with
-  // — either ./bin/auto-coder or the global symlink target.
+  // — either ./bin/autocode or the global symlink target.
   const argv = process.argv[1];
   if (argv && fs.existsSync(argv)) {
     return path.resolve(argv);
   }
   // Fallback — assume it's on PATH
-  return "auto-coder";
+  return "autocode";
 }
 
 export async function hookInstallCommand(name: string): Promise<void> {
@@ -48,7 +48,7 @@ export async function hookInstallCommand(name: string): Promise<void> {
   const repo = config.repos.find((r) => r.name === name);
   if (!repo) {
     console.error(`No repo named "${name}" is registered.`);
-    console.error("Run `auto-coder repo list` to see registered repos.");
+    console.error("Run `autocode repo list` to see registered repos.");
     process.exit(1);
   }
 
@@ -68,7 +68,7 @@ export async function hookInstallCommand(name: string): Promise<void> {
       return;
     }
     console.error(`✗ post-commit hook already exists at ${hookPath}`);
-    console.error("  It was not installed by auto-coder, so I won't overwrite it.");
+    console.error("  It was not installed by autocode, so I won't overwrite it.");
     console.error("  Remove it manually or append our sync line yourself:");
     console.error();
     console.error(`  "${resolveBinaryPath()}" sync ${name} --quiet > /dev/null 2>&1 &`);
@@ -82,9 +82,9 @@ export async function hookInstallCommand(name: string): Promise<void> {
 
   console.log(`✓ Installed post-commit hook at ${hookPath}`);
   console.log(`  Every commit in ${repo.path} will trigger:`);
-  console.log(`    auto-coder sync ${name} --quiet`);
+  console.log(`    autocode sync ${name} --quiet`);
   console.log();
-  console.log("To remove: auto-coder hook uninstall " + name);
+  console.log("To remove: autocode hook uninstall " + name);
 }
 
 export async function hookUninstallCommand(name: string): Promise<void> {
@@ -103,13 +103,13 @@ export async function hookUninstallCommand(name: string): Promise<void> {
 
   const existing = fs.readFileSync(hookPath, "utf-8");
   if (!existing.includes(HOOK_MARKER)) {
-    console.error(`✗ post-commit hook at ${hookPath} was not installed by auto-coder.`);
+    console.error(`✗ post-commit hook at ${hookPath} was not installed by autocode.`);
     console.error("  Refusing to delete a hook I don't own. Remove it manually if needed.");
     process.exit(1);
   }
 
   fs.unlinkSync(hookPath);
-  console.log(`✓ Removed auto-coder hook from ${hookPath}`);
+  console.log(`✓ Removed autocode hook from ${hookPath}`);
 }
 
 export async function hookListCommand(): Promise<void> {

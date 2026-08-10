@@ -18,7 +18,7 @@ export async function repoAddCommand(name: string, repoPath: string): Promise<vo
   const existing = config.repos.find((r) => r.name === name);
   if (existing) {
     console.error(`Repo "${name}" already registered at ${existing.path}`);
-    console.error(`Run \`auto-coder repo remove ${name}\` first if you want to change the path.`);
+    console.error(`Run \`autocode repo remove ${name}\` first if you want to change the path.`);
     process.exit(1);
   }
 
@@ -31,7 +31,7 @@ export async function repoListCommand(): Promise<void> {
   const config = loadConfig();
   if (config.repos.length === 0) {
     console.log("No repos registered yet.");
-    console.log("Use `auto-coder repo add <name> <path>` to add one.");
+    console.log("Use `autocode repo add <name> <path>` to add one.");
     return;
   }
 

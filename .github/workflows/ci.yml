@@ -27,7 +27,7 @@ jobs:
         run: npm run build
 
       - name: Verify CLI runs
-        run: ./bin/auto-coder --help
+        run: ./bin/autocode --help
 
   # ─── API (Cloudflare Worker) build ─────────────────────────────
   api:

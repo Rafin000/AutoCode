@@ -7,7 +7,7 @@ import { getDbStats, initDb } from "../db/init.js";
 export async function configCommand(): Promise<void> {
   if (!configExists()) {
     console.error(`No config found at ${CONFIG_FILE}`);
-    console.error("Run `auto-coder init` first.");
+    console.error("Run `autocode init` first.");
     process.exit(1);
   }
 
@@ -20,7 +20,7 @@ export async function configCommand(): Promise<void> {
   // DB stats summary
   console.log(`# Database: ${DB_FILE}`);
   if (!dbExists()) {
-    console.log("  (not created yet — run `auto-coder init`)");
+    console.log("  (not created yet — run `autocode init`)");
     return;
   }
   initDb(); // idempotent; makes sure schema is current

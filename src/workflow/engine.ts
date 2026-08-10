@@ -124,7 +124,7 @@ export async function runPipeline(
     if (result.status === "paused") {
       ctx.status = "paused";
       persistRun(ctx);
-      log(`  ⏸  Paused (resume with: auto-coder run resume ${ctx.run_id})`);
+      log(`  ⏸  Paused (resume with: autocode run resume ${ctx.run_id})`);
       return ctx;
     }
 
@@ -282,7 +282,7 @@ export async function resumeRun(
     if (result.status === "paused") {
       ctx.status = "paused";
       persistRun(ctx);
-      log(`  ⏸  Paused (resume with: auto-coder run resume ${ctx.run_id})`);
+      log(`  ⏸  Paused (resume with: autocode run resume ${ctx.run_id})`);
       return ctx;
     }
 

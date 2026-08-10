@@ -19,7 +19,7 @@ export async function knowledgeTestGraphCommand(): Promise<void> {
     await graph.verifyConnectivity();
     console.log("  ✓ Connected");
 
-    const testRepo = "__auto-coder-smoke-test__";
+    const testRepo = "__autocode-smoke-test__";
     const testNodeId = `repo:${testRepo}`;
 
     console.log("• Upserting a test Repo node...");
@@ -80,7 +80,7 @@ export async function knowledgeTestVectorsCommand(): Promise<void> {
     await vectors.ensureCollection();
     console.log("  ✓ Ready");
 
-    const testRepo = "__auto-coder-smoke-test__";
+    const testRepo = "__autocode-smoke-test__";
     const testDocs: VectorPoint[] = [
       {
         id: `${testRepo}:retry`,

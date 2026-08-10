@@ -28,13 +28,13 @@ export async function initCommand(): Promise<void> {
   seedDefaults();
 
   if (hadConfig && hadDb) {
-    console.log("Nothing to do — run `auto-coder config` to view current setup.");
+    console.log("Nothing to do — run `autocode config` to view current setup.");
     return;
   }
 
   console.log();
   console.log("Next steps:");
-  console.log("  auto-coder repo add <name> <path>    # register a repo");
-  console.log("  auto-coder sync <name>               # index it");
-  console.log('  auto-coder ask "<question>"          # ask questions');
+  console.log("  autocode repo add <name> <path>    # register a repo");
+  console.log("  autocode sync <name>               # index it");
+  console.log('  autocode ask "<question>"          # ask questions');
 }
