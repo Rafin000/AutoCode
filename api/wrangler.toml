@@ -1,6 +1,7 @@
 name = "auto-coder-api"
 main = "src/index.ts"
 compatibility_date = "2024-09-23"
+account_id = "0e0f90e6341c8b9e3b534bb3307f4608"
 
 # ─── D1 Database ─────────────────────────────────────────────────────────────
 # Create with: wrangler d1 create auto-coder-db
